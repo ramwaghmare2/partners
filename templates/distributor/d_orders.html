@@ -1,0 +1,103 @@
+{% include 'distributor/d_header.html' %}
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container px-4">
+            <div class="container my-4">
+                <h2 class="text-center animate__animated animate__fadeInDown">Your Orders</h2>
+                <p class="text-muted text-center"></p>
+            <!-- Filters -->
+            <div class="row mb-4" >
+                <form class="row g-3" method="GET" action="{{ url_for('distributor.distributor_orders') }}">
+                    <!-- Filter by Kitchen -->
+                    <div class="col-md-3">
+                        <label for="kitchen_filter">Filter by Kitchen:</label>
+                        <select name="kitchen_id" id="kitchen_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="All" {% if selected_kitchen_id == 'All' or not selected_kitchen_id %}selected{% endif %}>All</option>
+                            {% for kitchen in kitchens %}
+                                <option value="{{ kitchen.id }}" {% if selected_kitchen_id == kitchen.id|string %}selected{% endif %}>
+                                    {{ kitchen.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                
+                    <!-- Filter by Status -->
+                    <div class="col-md-3">
+                        <label for="status_filter">Filter by Status:</label>
+                        <select name="status" id="status_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="All" {% if order_status == 'All' %}selected{% endif %}>All</option>
+                            <option value="Processing" {% if order_status == 'Processing' %}selected{% endif %}>Processing</option>
+                            <option value="Completed" {% if order_status == 'Completed' %}selected{% endif %}>Completed</option>
+                            <option value="Cancelled" {% if order_status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                            <option value="Pending" {% if order_status == 'Pending' %}selected{% endif %}>Pending</option>
+                        </select>
+                    </div>
+                
+                    <!-- Filter by Date -->
+                    <div class="col-md-3">
+                        <label for="date_filter">Filter by Date:</label>
+                        <select name="date" id="date_filter" class="form-select" onchange="this.form.submit()">
+                            <option value="All" {% if date_filter == 'All' %}selected{% endif %}>All</option>
+                            <option value="Today" {% if date_filter == 'Today' %}selected{% endif %}>Today</option>
+                            <option value="Yesterday" {% if date_filter == 'Yesterday' %}selected{% endif %}>Yesterday</option>
+                            <option value="Weekly" {% if date_filter == 'Weekly' %}selected{% endif %}>Weekly</option>
+                            <option value="Monthly" {% if date_filter == 'Monthly' %}selected{% endif %}>Monthly</option>
+                            <option value="Yearly" {% if date_filter == 'Yearly' %}selected{% endif %}>Yearly</option>
+                        </select>
+                    </div>
+                </form>
+            </div> 
+            <div class="row">
+                {% if orders_data %}
+                <div class="table-responsive">
+                    <table id="OrderTable" class="table table-striped table-bordered table-hover">
+                        <thead class="text-center" style="background-color: #003366; color: #ffff;">
+                            <tr>
+                                <th>Sr No</th>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Items Name</th>
+                                <th>Quantity</th>
+                                <th>Total Amount</th>
+                                <th>Kitchen Name</th>
+                                <th>Created At</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders_data %}
+                                <tr class="animated fadeInUp text-center">
+                                <td>{{ loop.index }}</td>
+                                <td>{{ order.order_id }}</td>
+                                <td>{{ order.customer_name }}</td>
+                                <td>
+                                    {% for item in order['items'] %}
+                                        {{ item.item_name }} <br> 
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {% for item in order['items'] %}
+                                        {{ item.quantity }} <br>
+                                    {% endfor %}
+                                </td>
+                                <td>₹{{ order.total_amount }}</td>
+                                <td>{{ order.kitchen_name }}</td>
+                                <td>{{ order.created_at }}</td>
+                                <td>{{ order.status }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    <!-- Pagination Controls -->
+                    <div class="d-flex float-right" id="pagination-controls"></div>
+                </div>
+            {% else %}
+                <div class="alert alert-info text-center">
+                    You have no orders yet.
+                </div>
+            {% endif %}
+        </div>
+    </main>
+    {% include 'admin/admin_footer.html' %}
+</div>

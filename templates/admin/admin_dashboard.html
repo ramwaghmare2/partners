@@ -1,0 +1,58 @@
+{% include 'admin/admin_header.html' %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div id="layoutSidenav_content">
+<main>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>DASHBOARD</h1>
+        </header>
+        <div class="dashboard-summary">
+            <div class="card">
+                <h2>Total Sales Amount</h2>
+                <p>₹{{ total_sales_amount }}</p>
+            </div>
+            <div class="card">
+                <h2>Total Orders</h2>
+                <p>{{ total_orders_count }}</p>
+            </div>
+            <div class="card">
+                <h2>Quantity Sold</h2>
+                <p>{{ quantity_sold }}</p>
+            </div>
+        </div>
+        <section class="charts-section">
+            <div class="chart-container">
+                <canvas id="totalSales"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="salesByItemChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="quantityOverTimeChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="topSellingItemsChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="salesDistributionChart"></canvas>
+            </div>
+            <div class="chart-container">
+                <canvas id="dailyPerformanceChart"></canvas>
+            </div>
+        </section>
+    </div>
+    <script>
+        // Pass data from Flask to JavaScript
+        const totalSalesData = {{ total_sales_data | tojson }};
+        const salesByItemData = {{ sales_by_item | tojson }};
+        const quantitySoldOverTimeData = {{ quantity_sold_over_time | tojson }};
+        const topSellingItemsData = {{ top_selling_items | tojson }};
+        const salesDistributionData = {{ sales_distribution | tojson }};
+        const dailySalesPerformanceData = {{ daily_sales_performance | tojson }};
+    </script>
+    <script src="/static/js/admin_dashboard.js"></script>
+</main>
+{% include 'admin/admin_footer.html' %}
+</div>

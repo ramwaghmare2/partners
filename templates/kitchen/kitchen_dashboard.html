@@ -1,0 +1,237 @@
+{% include 'kitchen/kitchen_header.html' %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div id="layoutSidenav_content">
+    <main>
+        <div class="dashboard-container">
+            <header class="dashboard-header">
+                <h1>DASHBOARD</h1>
+            </header>
+            <div class="dashboard-summary">
+                <div class="card">
+                    <h2>Total Sales Amount</h2>
+                    <p>₹{{ total_sales_amount }}</p>
+                </div>
+                <div class="card">
+                    <h2>Total Orders</h2>
+                    <p>{{ total_orders_count }}</p>
+                </div>
+                <div class="card">
+                    <h2>Quantity Sold</h2>
+                    <p>{{ quantity_sold }}</p>
+                </div>
+            </div>
+            <section class="charts-section">
+                <div class="chart-container" >
+                    <canvas id="donutChart"></canvas>
+                </div>
+                <div class="chart-container" style="position: relative;">
+                    <!-- Filter Dropdown in the top-right corner -->
+                    <div style="position: absolute; top: 10px; right: 10px; z-index: 10;border: 1px solid">
+                        <form method="GET" action="{{url_for('dashboard.kitchen_dashboard')}}">
+                            <select name="filter_type" id="filterDropdown" class="btn btn-border">
+                                <option value="daily" {% if filter_type == 'daily' %}selected{% endif %}>Daily</option>
+                                <option value="weekly" {% if filter_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                                <option value="monthly" {% if filter_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                            </select>
+                            <button type="submit" class="btn btn-border">Apply</button>
+                        </form>
+                    </div>
+                    <canvas id="lineChart">
+                    </canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topSellingItemsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dailyOrdersChart"></canvas>
+                </div>
+            </section>
+        </div>
+        <script>
+            // Data from the backend (status_counts_dict)
+            const statusCounts = {{ status_counts|tojson }};
+        
+            // Extract labels and data
+            const labels = Object.keys(statusCounts);
+            const data = Object.values(statusCounts);
+        
+            // Donut chart configuration
+            const ctx = document.getElementById('donutChart').getContext('2d');
+            const donutChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Order Status',
+                        data: data,
+                        backgroundColor: [ 
+                        'rgba(0, 51, 102, 0.9)',
+                            'rgba(0, 128, 255, 0.8)',  // Deep Navy Blue (Completed)
+                    'rgba(0, 76, 153, 0.8)',  // Medium Blue (Cancelled)
+                    'rgba(0, 102, 204, 0.8)', // Sky Blue (Pending)
+                    'rgba(51, 153, 255, 0.7)', // Light Blue (Processing)
+                     // Bright Blue (Optional)
+                    'rgba(0, 204, 255, 0.7)'   // Cyan (Optional)
+                ],
+                borderColor: [
+                'rgba(0, 51, 102, 1)',
+                    'rgba(0, 128, 255, 1)',    // Deep Navy Blue
+                    'rgba(0, 76, 153, 1)',    // Medium Blue
+                    'rgba(0, 102, 204, 1)',   // Sky Blue
+                    'rgba(51, 153, 255, 1)',  // Light Blue
+                       // Bright Blue
+                    'rgba(0, 204, 255, 1)'    // Cyan
+                ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = data.reduce((sum, value) => sum + value, 0);
+                                    const percentage = ((context.raw / total) * 100).toFixed(2);
+                                    return `${context.label}: ${context.raw} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%' // Adjusts donut width
+                }
+            });
+            </script>
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+    // Get the context of the chart
+    const dailyPerformanceCtx = document.getElementById("lineChart").getContext("2d");
+
+    // Default filter type (can be set to 'daily' initially or fetched from Flask)
+    let filterType = "{{ filter_type }}";  // Get the initial filter type passed from Flask
+
+    // Get the daily sales data passed from Flask
+    const salesData = {
+        labels: {{ daily_sales_data['labels'] | tojson }},
+        values: {{ daily_sales_data['values'] | tojson }}
+    };
+
+    // Function to update the chart based on the selected filter type
+    function updateChart(filterType) {
+        const label = filterType === 'weekly' ? "Weekly Revenue" : (filterType === 'monthly' ? "Monthly Revenue" : "Daily Revenue");
+        const xAxisTitle = filterType === 'daily' ? 'Date' : (filterType === 'weekly' ? 'Week' : 'Month');
+
+        // Create or update the chart
+        new Chart(dailyPerformanceCtx, {
+            type: "line",
+            data: {
+                labels: salesData.labels,
+                datasets: [{
+                    label: label,
+                    data: salesData.values,
+                    backgroundColor: "rgba(0, 204, 255, 0.7)",
+                    borderColor: "rgba(0, 204, 255, 1)",
+                    borderWidth: 2,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: xAxisTitle
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Revenue'
+                        },
+                        beginAtZero: true,
+                    }
+                }
+            }
+        });
+    }
+
+    // Initial chart render
+    updateChart(filterType);
+
+    // Add event listener to the filter dropdown to update the filter type on selection
+    document.getElementById("filterDropdown").addEventListener("change", function () {
+        // Update the filterType, but don't update the chart yet
+        filterType = this.value;
+    });
+
+    // Add event listener to the Apply button to update the chart
+    document.getElementById("applyButton").addEventListener("click", function () {
+        // Now update the chart with the selected filter type
+        updateChart(filterType);
+    });
+});
+
+            </script>
+
+<script>
+    const topSellingItemsCtx = document.getElementById("topSellingItemsChart").getContext("2d");
+        new Chart(topSellingItemsCtx, {
+            type: "line",
+            data: {
+                labels: {{ top_selling_items['labels'] | tojson }},
+                datasets: [{
+                    label: "Top Selling Items",
+                    data: {{ top_selling_items['values'] | tojson }},
+                    backgroundColor: [
+                                    'rgba(0, 51, 102, 0.9)',
+                            'rgba(0, 128, 255, 0.8)',  // Deep Navy Blue (Completed)
+                    'rgba(0, 76, 153, 0.8)',  // Medium Blue (Cancelled)
+                    'rgba(0, 102, 204, 0.8)', // Sky Blue (Pending)
+                    'rgba(51, 153, 255, 0.7)', // Light Blue (Processing)
+                     // Bright Blue (Optional)
+                    'rgba(0, 204, 255, 0.7)'   // Cyan (Optional)
+                                ],
+                    borderColor: [
+                                    'rgba(0, 51, 102, 1)',
+                            'rgba(0, 128, 255, 1)',  // Deep Navy Blue (Completed)
+                    'rgba(0, 76, 153, 1)',  // Medium Blue (Cancelled)
+                    'rgba(0, 102, 204, 1)', // Sky Blue (Pending)
+                    'rgba(51, 153, 255, 1)', // Light Blue (Processing)
+                     // Bright Blue (Optional)
+                    'rgba(0, 204, 255, 1)'   // Cyan (Optional)
+                                ],
+                    borderWidth: 1
+                }]
+            }
+        });
+</script>
+<script>
+     const dailyOrdersChartCtx = document.getElementById("dailyOrdersChart").getContext("2d");
+        new Chart(dailyOrdersChartCtx, {
+            type: "bar",
+            data: {
+                labels: {{ order_data['labels'] | tojson }},
+                datasets: [{
+                    label: "Daily orders",
+                    data: {{ order_data['values'] | tojson }},
+                    backgroundColor: [
+                        'rgba(0, 128, 255, 0.8)',
+                                ],
+                    borderColor: [
+                    'rgba(0, 128, 255, 1)',
+                                ],
+                    borderWidth: 1
+                }]
+            }
+        });
+
+</script>
+            
+    </main>
+    {% include 'admin/admin_footer.html' %}
+</div>

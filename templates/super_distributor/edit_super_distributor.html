@@ -1,0 +1,55 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager/manager_header.html' %}
+{% endif %}
+<body>
+<div id="layoutSidenav_content">
+    <br>
+    <main>
+        <!-- Add Doctor Form Content Here -->
+        <div class="sd-container">
+            <h2 class="sd-form">Edit Super Distributor</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form method="post" class="sd-form" enctype="multipart/form-data">
+                <div class="sd-row">
+                    <input name="name" type="text" value="{{ super_distributor.name }}" required>
+                </div>
+                <div class="sd-row">
+                    <input name="email" type="email" value="{{ super_distributor.email }}" required>
+                </div>
+                <div class="sd-row">
+                    <input name="contact" type="text" value="{{ super_distributor.contact }}" required>
+                </div>
+                <div class="sd-row password-wrapper">
+                    <input id="password" name="password" type="password" placeholder="Password">
+                    <span class="eye-icon" onclick="togglePassword()">
+                        <i id="eye-icon" class="fa fa-eye"></i>
+                    </span>
+                </div>
+                <div class="sd-row">
+                    <label for="image" class="form-label">Profile Image (Optional)</label>
+                    <input type="file" class="form-control-file" id="image" name="image">
+                </div>
+                <br>
+                <div class="sd-buttons">
+                    <button type="submit" class="sd-submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+        <!-- End of Add Doctor Form Content -->
+    </main>
+</body>
+
+{% include 'sd_footer.html' %}

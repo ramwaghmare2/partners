@@ -1,0 +1,110 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #fdfefe;
+    margin: 0;
+    padding: 0;
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.dashboard-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+
+.card {
+    background: #fdfefe;
+    border: 1px solid #dfedf8;
+    border-radius: 20px;
+    padding: 15px;
+    text-align: center;
+    width: 30%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.card p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+.charts-section {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.chart-container {
+    background: #fdfefe;
+    border: 1px solid #dfedf8;
+    border-radius: 8px;
+    padding: 10px; /* Reduced padding */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex; /* Ensures proper alignment */
+    flex-direction: column;
+    justify-content: column; /* Centers the chart horizontally */
+    align-items: center; /* Centers the chart vertically */
+}
+
+.chart-container h2 {
+    margin-bottom: 10px; /* Adds space between the title and the chart */
+    text-align: center;
+    width: 100%;
+}
+
+.chart-container canvas{
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+.charts-section{
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Under line for cards in dashboard */
+
+.dashboard-summary .card p {
+    font-size: 2em;
+    font-weight: bold;
+    color: #333333;
+    position: relative; /* Required for the pseudo-element */
+}
+
+.dashboard-summary .card p::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px; /* Adjust to position the underline */
+    width: 0; /* Initially, the underline has no width */
+    height: 3px; /* Thickness of the underline */
+    background-color: #003366;
+    transition: width 0.3s ease-in-out; /* Add transition for smooth animation */
+}
+
+.dashboard-summary .card p:hover::after {
+    width: 100%; /* On hover, the underline expands to full width */
+}
+.dashboard-container { /* Light background for the dashboard */
+    padding: 30px;
+    border-radius: 10px;
+}

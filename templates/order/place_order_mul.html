@@ -1,0 +1,60 @@
+{% include 'customer/header.html' %}
+
+<head>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+</head>
+<br>
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container px-4">
+            <h2 class="text-center">Order</h2>
+
+        <!-- Display flash messages for success or error -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button class="btn" type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <!-- Manager Cards -->
+        <div class="container" style="height: 50vh;">
+            <div class="row justify-content-center align-items-center" style="height: 110%;">
+                <div class="col-md-7">
+                    <!-- Card Container -->
+                    {% for item in items %}
+                    <div class="card manager-card-cust">
+                        <div class="card-body manager-card-body">
+                            <!-- Manager Image -->
+                            <img src="{{ item.food_image }}" alt="Food Image" class="manager-image-cust" width="200" height="200">
+                            
+                            <!-- Manager Info -->
+                            <div class="manager-info mt-3">
+                                <h5 class="card-title">{{ item.item_name }}</h5>
+                                <p class="card-text"><strong>Price:</strong> {{ item.price }}</p>
+                                <p class="card-text"><strong>Description:</strong> {{ item.description }}</p>
+                                <p class="card-text"><strong>Kitchen:</strong> {{ item.kitchen_id }}</p>
+                                <form action="{{ url_for('order.order_cart') }}" method="post">
+                                    <input class="place-order-quantity" type="number" placeholder="{{ item.quantity }}" name="quantity">
+                                    <input type="text" name="kitchen_id" value="{{ item.kitchen_id }}" hidden>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <!-- Action Buttons -->
+                        <div class="action-buttons-cust">
+                            <button type="submit" class="btn btn-success btn-lg">Place Order</button>
+                        </div>
+                    </form>
+                    <br><br><br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+    

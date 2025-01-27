@@ -1,0 +1,55 @@
+{% include 'header.html' %}
+
+<head>
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+</head>
+<br>
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container px-4">
+            <h2 class="text-center">Food Items</h2>
+
+        <!-- Display flash messages for success or error -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button class="btn" type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <!-- Manager Cards -->
+        <div class="row">
+            {% for item in food_items %}
+            {% if item.status == 'activated' %}
+                <div class="col-md-4 mb-4"> <!-- Added margin-bottom for spacing between cards -->
+                    <div class="card manager-card">
+                        <div class="card-body manager-card-body">
+                            <!-- Manager Image -->
+                                <img src="{{ item.image }}" alt="Food Image" class="manager-image" width="120" height="120">
+                            <!-- Manager Info -->
+                            <div class="manager-info mt-3">
+                                <h5 class="card-title">{{ item.item_name }}</h5>
+                                <p class="card-text"><strong>Price:</strong> {{ item.price }}</p>
+                                <p class="card-text"><strong>Description:</strong> {{ item.description }}</p>
+
+                                <!-- Action Buttons -->
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('order.add_to_cart', item_id=item.id) }}" class="btn btn-warning btn-sm">Add To Cart</a>
+                                    <a href="{{ url_for('order.place_order', item_id=item.id) }}" class="btn btn-danger btn-sm">Place Order</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </main>
+
+{% include 'footer.html' %}
+    

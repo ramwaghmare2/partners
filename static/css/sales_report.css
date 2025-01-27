@@ -1,0 +1,76 @@
+/* Adjust chart width on smaller screens */
+@media screen and (max-width: 600px) {
+    .chart-container {
+        max-width: 100%;
+    }
+ 
+    .table-container {
+        max-height: 200px; /* Reduce height for smaller screens */
+    }
+}
+ 
+/* Under line for cards in dashboard */
+ 
+.dashboard-summary .card p {
+    font-size: 2em;
+    font-weight: bold;
+    color: #666565;
+    position: relative; /* Required for the pseudo-element */
+}
+ 
+.dashboard-summary .card p::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -5px; /* Adjust to position the underline */
+    width: 0; /* Initially, the underline has no width */
+    height: 3px; /* Thickness of the underline */
+    background-color: #003366;
+    transition: width 0.3s ease-in-out; /* Add transition for smooth animation */
+}
+ 
+.dashboard-summary .card p:hover::after {
+    width: 100%; /* On hover, the underline expands to full width */
+}
+ 
+.dashboard-summary {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+}
+.card {
+    background: #fdfefe;
+    border: 1px solid #dfedf8;
+    border-radius: 20px;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+ 
+.card h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+ 
+.card p {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+.chart-container {
+    background: #fdfefe;
+    border: 1px solid #dfedf8;
+    border-radius: 8px;
+    padding: 10px; /* Reduced padding */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex; /* Ensures proper alignment */
+    flex-direction: column;
+    justify-content: column; /* Centers the chart horizontally */
+    align-items: center; /* Centers the chart vertically */
+}
+
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+}

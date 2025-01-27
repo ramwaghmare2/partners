@@ -1,0 +1,167 @@
+{% include 'kitchen/kitchen_header.html' %}
+
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<style>
+    /* Custom table styles */
+    .dashboard-container {
+        background-color: #f8f9fa; /* Light background for the dashboard */
+        padding: 30px;
+        border-radius: 10px;
+    }
+
+    table {
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        overflow: hidden;
+    }
+
+    th, td {
+        text-align: center;
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    th {
+        background-color: #007bff; /* Blue background for the header */
+        color: rgb(48, 48, 48);
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    td {
+        background-color: #f2f9fc; /* Light blue background for rows */
+        color: #333;
+    }
+
+    tr {
+        background-color: #c4c4c4; 
+    }
+
+    /* Hover effect for rows */
+    tr:hover {
+        background-color: #f8f8f8; /* Very light blue */
+        transform: scale(1.02);
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+    /* Striped rows with fading animation */
+    tr:nth-child(odd) {
+        animation: fadeIn 1.2s ease-in-out;
+    }
+
+    tr:nth-child(even) {
+        animation: fadeIn 1.2s ease-in-out 0.2s;
+    }
+
+    /* Animation for fading in */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    /* Styling the 'Close Kitchen' button */
+    .btn-primary {
+        color: white;
+        transition: background-color 0.3s ease;
+    }
+
+    /* Card styling */
+    .card {
+        border-radius: 10px;
+        background-color: #ffffff;
+        padding: 20px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        text-align: center;
+    }
+
+    .card h2 {
+        color: #0d0d0e;
+    }
+
+    .card p {
+        font-size: 20px;
+        font-weight: bold;
+    }
+
+    .dashboard-summary .card {
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .dashboard-summary .card:hover {
+        transform: translateY(-5px);
+    }
+</style>
+
+<div id="layoutSidenav_content">
+    <br>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        <div class="dashboard-container">
+            <a class="btn" style="float: right; position: relative; background-color: #003366; color: #ffffff" href="{{ url_for('save_role_shares') }}">Close Kitchen</a>
+            <header class="dashboard-header">
+                <h1 style="margin-left: 11%;"><b>WALLET</b></h1>
+            </header>
+            <div class="dashboard-summary">
+                <div class="card">
+                    <h2>Today Total Sales</h2>
+                    <p>₹{{ total_sales }}</p>
+                </div>
+                <div class="card">
+                    <h2>Today's Wallet</h2>
+                    <p>₹{{ remaining_wallet }}</p>
+                </div>
+                <div class="card">
+                    <h2>Total Wallet</h2>
+                    <p>₹{{ total_royalty_amount }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mt-4">
+            <h2>Role Shares</h2>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sr.no</th>
+                        <th>ID</th>
+                        <th>Role</th>
+                        <th>Name</th>
+                        <th>Percentage</th>
+                        <th>Royalty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for role, data in role_shares_with_names.items() %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ data.id }}</td>
+                        <td>{{ role }}</td>
+                        <td>{{ data.name }}</td>
+                        <td>{{ data.royalty_percentage }}%</td>
+                        <td>{{ data.share }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+    {% include 'admin/admin_footer.html' %}
+</div>

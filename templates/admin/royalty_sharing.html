@@ -1,0 +1,140 @@
+{% include 'admin/admin_header.html' %}
+
+<div id="layoutSidenav_content">
+    <br>
+    <div class="container">
+        </div>
+        <main>
+            <!-- Add Doctor Form Content Here -->
+            <div class="sd-container col-6" style="margin-top: 10px; background-color: #dfdddd;">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                <h2 class="sd-form">Royalty Sharing</h2>
+                <form action="{{ url_for('royalty.add_royalty') }}" method="post" class="sd-form" enctype="multipart/form-data">
+                    <div class="form-floating mb-3">     
+                        <select id="role" name="role" class="form-control custom-select">
+                            <option value="Select">Select Role</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Manager">Manager</option>
+                            <option value="SuperDistributor">Super Distributor</option>
+                            <option value="Distributor">Distributor</option>
+                        </select>
+                    </div>
+                    <br>
+                    <!-- Cuisine Description -->
+                    <div class="sd-row">
+                        <input placeholder="Share Percentage" type="number" name="royalty" class="sd-form"> 
+                        </div>
+                    <br>
+                    <div class="sd-buttons" style="display: flex; justify-content: flex-end;">
+                        <button type="submit" style="background-color: #1E3A8A;" class="sd-submit">Submit</button>
+                    </div>                    
+                </form>
+            </div>
+            <!-- List of Cuisines -->
+            <div class="sd-container col-6 mt-5" style="background-color: #dfdddd;">
+                <h2 class="mb-4">Royalty Sharing Percentage</h2>
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Sr. No</th>
+                                <th>Role</th>
+                                <th>Percentage</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for share in shares %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>{{ share.role }}</td>
+                                    <td>{{ share.royalty_percentage }}</td>
+                                    <td>
+                                        <a
+                                            href="#"
+                                            class="btn btn-primary btn-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateModal"
+                                            data-id="{{ share.id }}"
+                                            data-role="{{ share.role }}"
+                                            data-percentage="{{ share.royalty_percentage }}"
+                                        >
+                                            Update
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Modal for updating the royalty percentage -->
+                <div class="modal fade" id="updateModal" tabindex="-1" aria-labelledby="updateModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="updateModalLabel">Update Royalty Percentage</h5>
+                                <!-- Close button -->
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form action="{{ url_for('royalty.update_royalty') }}" method="POST">
+                                <div class="modal-body">
+                                    <!-- Role Input (Read-only) -->
+                                    <div class="form-group">
+                                        <label for="role">Role</label>
+                                        <input type="text" class="form-control" id="role" name="role" readonly>
+                                    </div>
+                                    <!-- Royalty Percentage Input -->
+                                    <div class="form-group">
+                                        <label for="percentage">Percentage</label>
+                                        <input type="number" class="form-control" id="percentage" name="percentage" step="0.01" required>
+                                    </div>
+                                    <!-- Hidden Field to store the share ID -->
+                                    <input type="hidden" id="share_id" name="share_id">
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                    <button type="submit" class="btn btn-primary">Update</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+
+            <!-- Add Bootstrap JS and jQuery -->
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+            <script>
+                // Populate the modal with the data when the update button is clicked
+                document.querySelector('#updateModal').addEventListener('show.bs.modal', function (event) {
+                    var button = event.relatedTarget; // Button that triggered the modal
+                    var id = button.getAttribute('data-id');          // Get the share id
+                    var role = button.getAttribute('data-role');      // Get the role
+                    var percentage = button.getAttribute('data-percentage'); // Get the percentage
+            
+                    // Find the modal and set the input fields with the passed data
+                    var modal = this;
+                    modal.querySelector('#share_id').value = id;        // Set the hidden input for share_id
+                    modal.querySelector('#role').value = role;          // Set the role input (read-only)
+                    modal.querySelector('#percentage').value = percentage;  // Set the royalty percentage input
+                });
+            </script>            
+        
+    </main>
+    <br> 
+    {% include 'admin/admin_footer.html' %}
+</div>

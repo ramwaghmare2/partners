@@ -1,0 +1,241 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager_header.html' %}
+{% elif role == "SuperDistributor" %}
+    {% include 'super_distributor/sd_header.html'%}
+{% elif role == "Distributor" %}
+    {% include 'distributor/d_header.html'%}
+{% endif %}
+
+<style>
+    .dashboard-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .dashboard-header h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .dashboard-summary {
+        display: flex;
+        padding: 50px;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .dashboard-summary .card {
+        text-align: center;
+        background-color: #fff;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+        .dashboard-summary .card p {
+        font-size: 2em;
+        font-weight: bold;
+        color: #666565;
+        position: relative; /* Required for the pseudo-element */
+    }
+
+            .dashboard-summary .card p::after {
+                content: '';
+                position: absolute;
+                left: 0;
+                bottom: -5px; /* Adjust to position the underline */
+                width: 0; /* Initially, the underline has no width */
+                height: 3px; /* Thickness of the underline */
+                background-color: #003366;
+                transition: width 0.3s ease-in-out; /* Add transition for smooth animation */
+            }
+
+            .dashboard-summary .card p:hover::after {
+                width: 100%; /* On hover, the underline expands to full width */
+            }
+
+
+    .dashboard-summary .card:hover {
+        transform: scale(1.05);
+    }
+
+    .dashboard-summary .card h2 {
+        margin-bottom: 10px;
+        font-size: 1.2em;
+        color: #444;
+    }
+
+    .dashboard-summary .card p {
+        font-size: 2em;
+        font-weight: bold;
+        color: #000000;
+    }
+
+    #walletGraph {
+        height: 300px;
+    }
+
+    .dashboard-chart {
+        padding: 20px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .dashboard-chart h2 {
+        margin-bottom: 20px;
+        font-size: 1.5em;
+        color: #444;
+        text-align: center;
+    }
+</style>
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="dashboard-container">
+            <header class="dashboard-header">
+                <h1><b>WALLET</b></h1>
+            </header>
+            <div class="row">
+                <!-- First Column: Cards -->
+                <div class="col-md-4 p-3">
+                    <div class="dashboard-summary">
+                        <div class="card">
+                            <h2>Total Wallet</h2>
+                            <p>₹{{ total_wallet }}</p>
+                        </div>
+                        <div class="card">
+                            <h2>Yesterday's Wallet</h2>
+                            <p>₹{{ yesterday_wallet }}</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Second Column: Graph -->
+                <div class="col-md-8 p-3">
+                    <div class="dashboard-chart">
+                        <h2>Wallet Graph</h2>
+                        <canvas id="barChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    {% include 'admin/admin_footer.html' %}
+</div>
+
+<!-- Include the graph script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const totalSalesdataCtx = document.getElementById("barChart").getContext("2d");
+        
+        new Chart(totalSalesdataCtx, {
+            type: "bar",
+            data: {
+                labels: {{ wallet_data['labels'] | tojson }},
+                datasets: [{
+                    label: "Daily Wallet",
+                    data: {{ wallet_data['values'] | tojson }},
+                    backgroundColor: [
+                    'rgba(72, 138, 153, 1)',
+                        'rgba(219, 174, 88, 1)',
+                        'rgba(172, 62, 49, 1)',
+                        'rgba(72, 72, 72, 1)'
+                    ],
+                    borderColor: [
+                        'rgba(72, 138, 153, 1)',
+                        'rgba(219, 174, 88, 1)',
+                        'rgba(172, 62, 49, 1)',
+                        'rgba(72, 72, 72, 1)'
+                    ],
+                    borderWidth: 1,
+                    barThickness: 55,  // Adjust the thickness of the bars
+                    hoverBackgroundColor: [
+                        'rgba(72, 138, 153, 0.8)',
+                        'rgba(219, 174, 88, 0.8)',
+                        'rgba(172, 62, 49, 0.8)',
+                        'rgba(72, 72, 72, 0.8)'
+                    ],
+                    hoverBorderColor: [
+                        'rgba(72, 138, 153, 1)',
+                        'rgba(219, 174, 88, 1)',
+                        'rgba(172, 62, 49, 1)',
+                        'rgba(72, 72, 72, 1)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: {
+                    duration: 1500,  // Set the duration for the chart animation
+                    easing: 'easeOutBounce',  // Make the bars animate with a bouncing effect
+                    onComplete: function() {
+                        console.log("Animation complete!");
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(200, 200, 200, 0.2)',  // Lighter grid color for better readability
+                            lineWidth: 1
+                        },
+                        ticks: {
+                            font: {
+                                size: 14,
+                                family: 'Arial, sans-serif',
+                                weight: 'bold'
+                            },
+                            color: '#333'  // Color for tick labels
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false  // Remove gridlines on the X-axis for a cleaner look
+                        },
+                        ticks: {
+                            font: {
+                                size: 14,
+                                family: 'Arial, sans-serif',
+                                weight: 'bold'
+                            },
+                            color: '#333'  // Color for tick labels
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',  // Dark background for tooltips
+                        titleColor: 'white',  // Tooltip title color
+                        bodyColor: 'white',  // Tooltip body color
+                        footerColor: 'white',  // Tooltip footer color
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.raw ? '₹ ' + tooltipItem.raw : '₹ 0';  // Format the tooltip values
+                            }
+                        }
+                    }
+                },
+                hover: {
+                    mode: 'index',  // Allows hover to highlight entire dataset (bar)
+                    intersect: false
+                },
+                layout: {
+                    padding: {
+                        left: 20,
+                        right: 20,
+                        top: 20,
+                        bottom: 20
+                    }
+                }
+            }
+        });
+    });
+</script>
+

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Dashboard - Kitchen</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+        <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet" />
+        <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+        <style>
+            /* Style for the green dot */
+            /* Add animation for sidebar links */
+            .nav-link {
+                transition: background-color 0.3s ease, transform 0.3s ease;
+            }
+
+            .nav-link:hover {
+                background-color: #007bff;
+                transform: translateX(5px);
+                color: white;
+            }
+
+            /* Animation for the sidebar collapse button */
+            .sb-sidenav-collapse-arrow {
+                transition: transform 0.3s ease;
+            }
+
+            .sb-sidenav-collapse-arrow:hover {
+                transform: rotate(180deg);
+            }
+
+            /* Animation for profile image */
+            .profile-image {
+                transition: transform 0.3s ease;
+            }
+
+            .profile-image:hover {
+                transform: scale(1.1);
+            }
+
+            /* Add bounce effect to menu items */
+            .nav-link, .sb-nav-link-icon {
+                animation: fadeIn 1s ease-out;
+            }
+
+            @keyframes fadeIn {
+                0% {
+                    opacity: 0;
+                }
+                100% {
+                    opacity: 1;
+                }
+            }
+
+            /* Add subtle fade-in effect on page load */
+            body {
+                animation: fadeIn 1s ease-out;
+            }
+
+            @keyframes fadeIn {
+                0% {
+                    opacity: 0;
+                }
+                100% {
+                    opacity: 1;
+                }
+            }
+        </style>
+    </head>
+    <body class="sb-nav-fixed">
+        <nav class="sb-topnav navbar navbar-expand navbar-dark">
+            <!-- Navbar Brand-->
+            <a class="navbar-brand ps-3" href="{{ url_for('kitchen.kitchen_home')}}">FDA</a>
+            <!-- Sidebar Toggle-->
+            <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
+            <!-- Navbar Search-->
+            <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+                <div class="input-group">
+                    <input class="form-control" type="text" placeholder="Search for..." aria-label="Search for..." aria-describedby="btnNavbarSearch" />
+                    <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+                </div>
+            </form>
+            <!-- Navbar-->
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-1">
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="{{ url_for('notification.get_notifications') }}" type="button" ><i class="fa-solid fa-bell"></i>
+                        {% if notification_check %}
+                            <span class="notification-dot">{{ notification_check }}</span>
+                        {% endif %}
+                    </a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbarDropdown" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-user fa-fw"></i></a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <!--   <li><a class="dropdown-item" href="#!">Settings</a></li>
+                        <li><a class="dropdown-item" href="#!">Activity Log</a></li> --> 
+                        <li><a class="dropdown-item" href="{{ url_for('user_bp.get_profile') }}">Profile<i class="fas fa-user-tie" style="margin-left:56% ;"></i></a></li>
+                        <li><a class="dropdown-item" href="{{ url_for('user_bp.activity_logs') }}">View Logs<i class="fas fa-file-alt" style="margin-left:35% ;"></i></a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item text-center" href="{{ url_for('user_bp.logout') }}">Logout<i class="fa fa-sign-out" style="margin-left:50% ;"></i></a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <p class="text-center">
+                                {% if encoded_image %}
+                                <div class="profile-image-wrapper">
+                                    <img src="data:image/jpeg;base64,{{ encoded_image }}" alt="Profile Image" class="profile-image" style="width: 80px; height: 80px;">
+                                </div>
+                                {% endif %}
+                                <p class="text-center">
+                                    <b>{{ user_name }}</b><br>
+                                </p> 
+                            <a class="nav-link" href="{{ url_for('kitchen.kitchen_home')}}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                                Dashboard
+                            </a>
+                            <a class="nav-link" href="{{ url_for('dashboard.kitchen_dashboard')}}">
+                                <div class="sb-nav-link-icon"><i class="fas fa-chart-bar"></i></div>
+                                Statistics
+                            </a>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsemenu" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="sb-nav-link-icon"><i class="fas fa-pizza-slice"></i></div>
+                                Food & Dining
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapsemenu" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionPages">
+                                    <a class="nav-link collapsed" href="{{ url_for('food_item.add_food_item') }}">
+                                        Add Food Item
+                                    </a>
+                                    <a class="nav-link collapsed" href="{{ url_for('food_item.get_food_items_by_kitchen', kitchen_id=user_id) }}">
+                                        Food Item List
+                                    </a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapsePages" aria-expanded="false" aria-controls="collapsePages">
+                                <div class="sb-nav-link-icon"><i class="fas fa-shopping-basket"></i></div>
+                                Orders
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="collapsePages" aria-labelledby="headingTwo" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav accordion" id="sidenavAccordionPages">
+                                    <a class="nav-link collapsed" href="{{ url_for('order.kitchen_orders') }}">
+                                        All Orders
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="sb-sidenav-footer">
+                        <div class="d-flex align-items-center">
+                            <i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>
+                            <span class="small text-muted">Logged in as :</span>
+                        </div>
+                        <span class="font-weight-bold ml-4">{{ role }}</span>
+                    </div>
+                </nav>
+            </div>
+            
+<script src="https://cdn.socket.io/4.3.2/socket.io.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    // Connect to the Socket.IO server
+    const socket = io.connect(window.location.origin);
+
+    // Function to update the online status on the server
+    function updateStatus(status) {
+        socket.emit('status_update', { status: status });
+    }
+
+    // Listen for 'status_update' event
+    socket.on('status_update', function(data) {
+        if (data.status === 'online') {
+            console.log(data.user + ' is online');
+            // Logic to update the status display (e.g., green dot)
+        } else if (data.status === 'offline') {
+            console.log(data.user + ' is offline');
+            // Logic to update the status display (e.g., red dot)
+        }
+    });
+
+    // Check if the user was previously online
+    if (localStorage.getItem('userStatus') === 'online') {
+        // Notify the server that the user is online when the page loads
+        window.onload = function() {
+            updateStatus('online');
+            localStorage.setItem('userStatus', 'online'); // Ensure the status is stored as online
+        };
+    } else {
+        window.onload = function() {
+            updateStatus('offline');
+            localStorage.setItem('userStatus', 'offline');
+        };
+    }
+
+    // Notify the server when the user switches to the tab (gains focus)
+    window.onfocus = function() {
+        if (localStorage.getItem('userStatus') !== 'online') {
+            updateStatus('online');
+            localStorage.setItem('userStatus', 'online');
+        }
+    };
+
+    // Notify the server when the user switches away from the tab (loses focus)
+    window.onblur = function() {
+        updateStatus('offline');
+        localStorage.setItem('userStatus', 'offline');
+    };
+
+    // Periodically send a heartbeat to the server to keep the status as online
+    setInterval(() => {
+        if (localStorage.getItem('userStatus') === 'online') {
+            updateStatus('online');
+        }
+    }, 60000); // Sends every 60 seconds
+
+    // Handle socket connection error
+    socket.on('connect_error', () => {
+        console.error('Connection to server failed!');
+    });
+</script>
+            

@@ -1,0 +1,213 @@
+{% include 'customer/header.html' %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4 text">Your Orders</h2>
+    <!-- Display flash messages for success or error -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button class="btn" type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    
+    {% if orders_data %}
+        {% for order in orders_data %}
+            <div class="order-card" style="position: relative;">
+                    <h3>Order ID: {{ order.order_id }}</h3>
+                    <p>Kitchen Name: {{ order.kitchen_id }}</p>
+                    <p>Created At: {{ order.created_at }}</p>
+                    <p>Status: <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span></p>
+                    <div class="order-items">
+                        <h4>Items:</h4>
+                        {% for item in order['items'] %}
+                            <div class="order-item">
+                                <span>Item Name: {{ item.item_id }}</span>
+                                <span>Quantity: {{ item.quantity }}</span>
+                                <span>Price: ₹{{ item.price }}</span>
+                                <span>Total Price: ₹{{ item.item_total_price }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                <div class="order-summary">
+                    <strong class="total-price">Total Amount for Order: ₹{{ order.total_amount }}</strong>
+                </div>
+                <!-- Delete Button -->
+                {% if order.status != 'Completed' %}
+                    <a href="{{ url_for('order.cancel_order', order_id=order.order_id) }}" style="position: absolute; top: 10px; right: 10px;" class="btn btn-danger btn-sm">Cancel</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No orders found.</p>
+    {% endif %}
+
+</div>
+<br><br><br><br><br>
+
+<!-- Additional styling for the table -->
+<style>
+    /* Smooth Fade-in Animation */
+    .animated {
+        animation-duration: 0.5s;
+        animation-fill-mode: both;
+    }
+
+    .fadeInUp {
+        animation-name: fadeInUp;
+    }
+
+    @keyframes fadeInUp {
+        0% {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Table Row Hover Effect */
+    tbody tr:hover {
+        background-color: #f8f9fa;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    /* Table Styling */
+    .table {
+        border-collapse: collapse;
+        font-family: 'Arial', sans-serif;
+    }
+
+    /* Remove inner borders for table rows */
+    .table td, .table th {
+        border: none;
+    }
+
+    /* Border only on the table header and bottom */
+    .table thead {
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .table tfoot {
+        border-top: 2px solid #dee2e6;
+    }
+
+    .table th, .table td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+
+    .table th {
+        background-color: #f1f1f1;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .table td {
+        background-color: #fff;
+        color: #555;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f9f9f9;
+    }
+
+    .table-bordered {
+        border: 1px solid #dee2e6;
+    }
+
+    /* Badge Styling for Status */
+    .badge {
+        font-size: 14px;
+        padding: 5px 10px;
+        text-transform: capitalize;
+    }
+
+    .badge-completed {
+        background-color: #28a745;
+        color: white;
+    }
+
+    .badge-cancelled {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .badge-processing {
+        background-color: #ffc107;
+        color: white;
+    }
+
+    .badge-pending {
+        background-color: #6c757d;
+        color: white;
+    }
+
+    /* Cancel Button Styling */
+    .cancel-btn {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        padding: 8px 16px;
+        color: white;
+        border-radius: 20px;
+        font-weight: bold;
+        transition: background-color 0.3s ease, transform 0.3s ease;
+    }
+
+    .cancel-btn:hover {
+        background-color: #c82333;
+        transform: scale(1.1);
+    }
+
+    /* Tooltips */
+    .btn i {
+        font-size: 14px;
+    }
+
+    /* Modal Styling */
+    .modal-content {
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-footer button {
+        border-radius: 20px;
+    }
+
+    /* Table responsive styling */
+    .table-responsive {
+        margin-top: 30px;
+    }
+</style>
+
+<!-- Required Bootstrap JS and jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script> <!-- Full version of jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script> <!-- Popper.js -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script> <!-- Bootstrap JS -->
+
+<!-- Font Awesome for icons -->
+<script src="https://kit.fontawesome.com/a076d05399.js"></script>
+
+<!-- Modal Initialization Script -->
+<script>
+    $(document).ready(function () {
+        // Ensure all cancel buttons trigger their respective modal
+        $('.cancel-btn').click(function() {
+            // Show the modal when button is clicked
+            var targetModal = $(this).data('target');
+            $(targetModal).modal('show');
+        });
+    });
+</script>
+
+{% include 'customer/footer.html' %}
