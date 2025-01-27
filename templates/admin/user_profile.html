@@ -1,0 +1,165 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager/manager_header.html' %}
+{% elif role == 'SuperDistributor' %}
+    {% include 'super_distributor/sd_header.html' %}
+{% elif role == 'Distributor' %}
+    {% include 'distributor/d_header.html' %}
+{% elif role == 'Kitchen' %}
+    {% include 'kitchen/kitchen_header.html' %}
+{% endif %}
+<head>
+    <style>
+        .main-body {
+            padding: 15px;
+        }
+        .card {
+            box-shadow: 0 1px 3px 0 rgba(0,0,0,.1), 0 1px 2px 0 rgba(0,0,0,.06);
+        }
+
+        .cards {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #d7d7d7;
+            background-clip: border-box;
+            border: 0 solid rgba(0,0,0,.125);
+            border-radius: .23rem;
+        }
+
+        .card-body {
+            flex: 1 1 auto;
+            min-height: 1px;
+            padding: 1rem;
+        }
+
+        .gutters-sm {
+            margin-right: -8px;
+            margin-left: -8px;
+        }
+
+        .gutters-sm>.col, .gutters-sm>[class*=col-] {
+            padding-right: 8px;
+            padding-left: 8px;
+        }
+        .mb-3, .my-3 {
+            margin-bottom: 1rem!important;
+        }
+
+        .bg-gray-300 {
+            background-color: #e7e7e7;
+        }
+        .h-100 {
+            height: 100%!important;
+        }
+        .shadow-none {
+            box-shadow: none!important;
+        }
+
+        .text {
+          color: #525151;
+        }
+
+        .mb-0, .mb-1{
+          color:#003366;
+        }
+
+    </style>
+</head>
+<div id="layoutSidenav_content">
+    <main>
+        <!-- Apply full-width and centering styles -->
+        <div class="d-flex justify-content-center align-items-center" style="min-height: 80vh; width: 100%;">
+          <div class="cards p-4" style="max-width: 950px; width: 100%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+                  {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                              <span aria-hidden="true">&times;</span>
+                          </button>
+                      </div>
+                  {% endfor %}
+              {% endif %}
+          {% endwith %}
+              <div class="main-body">
+                  <div class="row gutters-sm" style="margin-left: 55px; margin-top: 25px;">
+                      <div class="col-md-5 mb-3">
+                        <div class="card ">
+                          <div class="card-body">
+                            <div class="d-flex flex-column align-items-center text-center">
+                              <img src="data:image/jpeg;base64,{{ encoded_image }}" alt="Profile Image" class="profile-image" style="width: 127px; height: 127px;">
+                              <div class="mt-3">
+                                <h4>{{ user.name }}</h4>
+                                <p class="mb-1">{{ role }}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="card mb-3">
+                          <div class="card-body">
+                            <div class="row">
+                              <div class="col-sm-3">
+                                {% if role == 'Kitchen' %}
+                                  <h6 class="mb-0">Kitchen Name</h6>
+                                {% else %}
+                                  <h6 class="mb-0">Name</h6>
+                                {% endif %}
+                              </div>
+                              <div class="col-sm-9 text">
+                                  {{ user.name }}
+                              </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                              <div class="col-sm-3">
+                                <h6 class="mb-0">Email</h6>
+                              </div>
+                              <div class="col-sm-9 text">
+                                {{ user.email }}
+                              </div>
+                            </div>
+                            <hr>
+                            <div class="row">
+                              <div class="col-sm-3">
+                                <h6 class="mb-0">Mobile</h6>
+                              </div>
+                              <div class="col-sm-9 text">
+                                  {{ user.contact }}
+                              </div>
+                            </div>
+                            <hr>
+                            {% if user.address %}
+                            <div class="row">
+                              <div class="col-sm-3">
+                                <h6 class="mb-0">Address</h6>
+                              </div>
+                              <div class="col-sm-9 text">
+                                {{ user.address }}
+                              </div>
+                            </div>
+                            <hr>
+                            {% endif %}
+                            <div class="row">
+                              <div class="col-sm-12" style="text-align: right;">
+                                <a class="btn btn-sm btn-warning" href="{{ url_for('user_bp.edit_profile') }}">
+                                  <i class="fas fa-edit"></i> Edit</a>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </main>
+  {% include 'admin/admin_footer.html' %}
+</div>

@@ -1,0 +1,160 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager_header.html' %}
+{% else %}
+    {% include 'super_distributor/sd_header.html' %}
+{% endif %}
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container-fluid px-4 mt-3">
+            <h2 class="text-center">Super Distributors List</h2>
+            <p><b>Total Super Distributors - {{sd_count}}</b></p>
+        <!-- Display flash messages for success or error -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+        <!-- Filters -->
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <form method="GET" action="{{ url_for('super_distributor.all_super_distributor') }}">
+                    <label for="filter">Filter by Status:</label>
+                    <select name="status" id="filter" class="form-select" onchange="this.form.submit()">
+                        <option value="all" {% if filter == 'all' %}selected{% endif %}>All</option>
+                        <option value="activated" {% if filter == 'activated' %}selected{% endif %}>Activated</option>
+                        <option value="deactivated" {% if filter == 'deactivated' %}selected{% endif %}>Deactivated</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+        <!-- Manager Cards -->
+        <div class="row">
+            {% if all_super_distributors %}
+            {% for sd in all_super_distributors %}
+                <div class="col-md-4 mb-4"> <!-- Added margin-bottom for spacing between cards -->
+                    <div class="card manager-card">
+                        <div class="card-body manager-card-body">
+                            <div class="status-dot-container">
+                                {% if sd.online_status %}
+                                    <span class="green-dot"></span> <span class="status-text">Online</span>
+                                {% else %}
+                                    <span class="red-dot"></span> <span class="status-text">Offline</span>
+                                {% endif %}
+                            </div>
+                            <div class="view" style="position: absolute; top: 10px; right: 10px; display: flex;">
+                                <a href="{{ url_for('super_distributor.view_details', user_id=sd.id )}}" class="btn btn-light btn-sm">Details</a>
+                            </div>
+                            <!-- Manager Image -->
+                            <div>
+                                {% if sd.image_base64 %}
+                                    <img src="{{ sd.image_base64 }}" alt="Manager Image" class="manager-image" width="120" height="120">
+                                {% else %}
+                                    No Image
+                                {% endif %}
+                            </div>
+                            <!-- Manager Info -->
+                            <div class="manager-info mt-3">
+                                <h5 class="card-title">{{ sd.name }}</h5>
+                                <p class="card-text"><strong>Email:</strong> {{ sd.email }}</p>
+                                <p class="card-text"><strong>Contact:</strong> {{ sd.contact }}</p>
+                                <p class="card-text">
+                                    <strong>Status:</strong> 
+                                    <span class="badge 
+                                        {% if sd.status == 'activated' %}
+                                            bg-success
+                                        {% else %}
+                                            bg-secondary
+                                        {% endif %}">
+                                        {{ sd.status | capitalize }}
+                                    </span>
+                                </p>
+                                <!-- Action Buttons -->
+                                {% if sd.status == 'deactivated' %}
+                                    {% if role == 'Admin' %}
+                                        <div class="action-buttons" >
+                                            <a href="{{ url_for('super_distributor.lock_sd', sd_id=sd.id) }}" onclick="return confirm('Are you sure you want to Unlock this Super Distributor {{ sd.name }}?')" class="btn btn-success btn-sm">
+                                                <i class="bi bi-check2-circle"></i>
+                                                Unlock
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('super_distributor.edit_super_distributor', sd_id=sd.id ) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i> Edit</a>
+                                    <a href="{{ url_for('super_distributor.delete_super_distributor', sd_id=sd.id) }}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this Super Distributor?')">
+                                        <i class="fas fa-trash-alt"></i> Delete</a>
+                                    {% if sd.status == 'activated' and role == 'Admin' %}
+                                        <a href="{{ url_for('super_distributor.lock_sd', sd_id=sd.id) }}" onclick="return confirm('Are you sure you want to Lock this Super Distributor {{ sd.name }}?')" class="btn btn-secondary btn-sm">
+                                            <i class="bi bi-x-circle"></i>
+                                            Lock
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+            {% else %}
+            <div class="alert text-center">
+                <p class="fs-3 text-center">
+                    <img src="{{ url_for('static', filename='images/not-available.gif') }}" alt="No Data Available" style="width: 100px; height: 100px;">
+                    <br>
+                    No Super Distributors !
+                </p>
+            </div>
+            {% endif %}
+        </div>
+        <style>
+            .status-dot-container {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                display: flex;
+                align-items: center;
+            }
+        
+            .green-dot, .red-dot {
+                width: 12px;
+                height: 12px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 5px;
+            }
+        
+            .green-dot {
+                background-color: green;
+            }
+        
+            .red-dot {
+                background-color: red;
+            }
+        
+            .status-text {
+                font-size: 14px;
+                font-weight: bold;
+                color: #333;
+            }
+        
+            .manager-card {
+                position: relative;
+                overflow: hidden;
+            }
+        </style>
+        
+    </main>
+
+{% include 'admin/admin_footer.html' %}
+

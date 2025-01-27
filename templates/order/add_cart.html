@@ -1,0 +1,176 @@
+{% include 'customer/header.html' %}
+
+<head>
+    <style>
+        /* Main Card Container */
+        .manager-card-cust-add {
+            display: flex;
+            flex-direction: row;
+            width: 80%;
+            margin: 30px auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: #fff;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        /* Card Hover Effect */
+        .manager-card-cust-add:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Image Container */
+        .manager-image-cust-add {
+            width: 40%;
+            height: auto;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            border-top-left-radius: 15px;
+            border-bottom-left-radius: 15px;
+        }
+
+        /* Card Content */
+        .manager-info-add {
+            padding: 30px;
+            width: 60%;
+            text-align: left;
+        }
+
+        /* Title Styling */
+        .manager-info-add h5 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+            transition: color 0.3s ease;
+        }
+
+        .manager-info-add h5:hover {
+            color: #28a745;
+        }
+
+        /* Description and Price Styling */
+        .manager-info-add p {
+            font-size: 1.2rem;
+            color: #777;
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+
+        .manager-info-add p strong {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Add to Cart Button Styling */
+        .action-buttons-cust-add button {
+            font-size: 1.2rem;
+            padding: 12px 25px;
+            border-radius: 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Button Hover Effect */
+        .action-buttons-cust-add button:hover {
+            background-color: #218838;
+            transform: scale(1.05);
+        }
+
+        /* Quantity Input Field Styling */
+        .manager-info-add input[type="number"] {
+            padding: 10px;
+            font-size: 1rem;
+            width: 60%;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        /* Responsiveness */
+        @media (min-width: 768px) {
+            .manager-card-cust-add {
+                width: 70%; /* Wider card for medium to large screens */
+            }
+        }
+
+        @media (max-width: 767px) {
+            .manager-card-cust-add {
+                flex-direction: column; /* Stack image and content on smaller screens */
+                width: 90%;
+            }
+
+            .manager-image-cust-add {
+                width: 100%;
+                height: 250px;
+                border-radius: 15px;
+            }
+
+            .manager-info-add {
+                width: 100%;
+                text-align: center;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<br>
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container px-4">
+            <h2 class="text-center mb-4">Order</h2>
+
+            <!-- Display flash messages for success or error -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button class="btn" type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Manager Cards -->
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-md-10">
+                        <!-- Card Container -->
+                        <div class="card manager-card-cust-add">
+                            <!-- Food Image -->
+                            <img src="{{ item.image_base64 }}" alt="Food Image" class="manager-image-cust-add">
+
+                            <!-- Manager Info -->
+                            <div class="manager-info-add">
+                                <h5 class="card-title">{{ item.item_name }}</h5>
+                                <p class="card-text"><strong>Price:</strong> ₹{{ item.price }}</p>
+                                <p class="card-text"><strong>Description:</strong> {{ item.description }}</p>
+                                <p class="card-text"><strong>Kitchen:</strong> {{ item.kitchen.name }}</p>
+                                
+                                <form action="{{ url_for('order.add_to_cart', item_id=item.id) }}" method="post">
+                                    <input type="number" placeholder="Quantity" name="quantity" min="1" required>
+                                    <input type="text" name="kitchen_id" value="{{ item.kitchen_id }}" hidden>
+                                    <!-- Action Buttons -->
+                                    <div class="action-buttons-cust-add">
+                                        <button type="submit" class="btn btn-success btn-lg">Add To Cart</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+{% include 'customer/footer.html' %}

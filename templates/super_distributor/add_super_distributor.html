@@ -1,0 +1,75 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager_header.html' %}
+{% else %}
+    {% include 'sd_header.html' %}
+{% endif %}
+
+<div id="layoutSidenav_content">
+    <br>
+    <main>
+        <!-- Add Doctor Form Content Here -->
+        <div class="sd-container">
+            <h2 class="sd-form">Add Super Distributor</h2>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <form action="{{ url_for('super_distributor.add_super_distributor') }}" method="post" class="sd-form">
+                <div class="sd-row">
+                    <input name="name" type="text" placeholder="Super Distributor Name" required>
+                </div>
+                <div class="sd-row">
+                    <input name="email" type="email" placeholder="Email" required>
+                </div>
+                <div class="sd-row">
+                    <input name="mobile_number" type="text" placeholder="Mobile" required>
+                </div>
+                <div class="sd-row password-wrapper">
+                    <input id="password" name="password" type="password" placeholder="Password*" required>
+                    <span class="eye-icon" onclick="togglePassword()">
+                        <i id="eye-icon" class="fa fa-eye"></i>
+                    </span>
+                </div>
+                <div class="sd-row">
+                    <label for="image">Super Distributor Image</label>
+                    <input type="file" class="form-control-file" id="image" name="image">
+                </div>
+                <br>
+                {% if role=='Manager' %}
+                <div class="sd-row">
+                    <input type="text"  placeholder="{{user_name}}" name="username" hidden>
+                </div>
+                {% else %}
+                <div class="sd-row">
+                    <label for="manager">Select Manager:</label>
+                    <select name="manager" id="manager" required>
+                        <option value="">-- Select Manager --</option>
+                        {% for manager in managers %}
+                            <option value="{{ manager.id }}">{{ manager.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <br>
+                <div class="sd-buttons">
+                    <button style="background-color: #003366;" type="submit" class="sd-submit">Submit</button>
+                </div>
+            </form>
+        </div>
+    </main>
+    <br>
+    
+{% include 'sd_footer.html' %}
+
+
+

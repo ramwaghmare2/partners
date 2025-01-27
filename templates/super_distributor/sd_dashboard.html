@@ -1,0 +1,179 @@
+{% include 'sd_header.html' %}
+<link rel="stylesheet" href="/static/css/dashboard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div id="layoutSidenav_content">
+    <main>
+        <div class="dashboard-container">
+            <header class="dashboard-header">
+                <h1>DASHBOARD</h1>
+            </header>
+            <div class="dashboard-summary">
+                <div class="card">
+                    <h2>Total Sales Amount</h2>
+                    <p>₹{{ total_sales_amount }}</p>
+                </div>
+                <div class="card">
+                    <h2>Total Orders</h2>
+                    <p>{{ total_orders_count }}</p>
+                </div>
+                <div class="card">
+                    <h2>Quantity Sold</h2>
+                    <p>{{ quantity_sold }}</p>
+                </div>
+            </div>
+            <section class="charts-section">
+                <div class="chart-container">
+                    <canvas id="totalSales"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesByItemChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="quantityOverTimeChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="topSellingItemsChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="salesDistributionChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dailyPerformanceChart"></canvas>
+                </div>
+            </section>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                    // Chart 1: Total Sales
+                    const totalSalesdataCtx = document.getElementById("totalSales").getContext("2d");
+            new Chart(totalSalesdataCtx, {
+                type: "bar",
+                data: {
+                    labels: {{ total_sales_data['labels'] | tojson }},
+                    datasets: [{
+                        label: "Total Sales by Distributor",
+                        data: {{ total_sales_data['values'] | tojson }},
+                        backgroundColor: [ 
+                        'rgba(0, 51, 102, 0.9)',
+                            'rgba(0, 128, 255, 0.8)',  // Deep Navy Blue (Completed)
+                    'rgba(0, 76, 153, 0.8)',  // Medium Blue (Cancelled)
+                    'rgba(0, 102, 204, 0.8)', // Sky Blue (Pending)
+                    'rgba(51, 153, 255, 0.7)', // Light Blue (Processing)
+                     // Bright Blue (Optional)
+                    'rgba(0, 204, 255, 0.7)'   // Cyan (Optional)
+                ],
+                borderColor: [
+                'rgba(0, 51, 102, 1)',
+                    'rgba(0, 128, 255, 1)',    // Deep Navy Blue
+                    'rgba(0, 76, 153, 1)',    // Medium Blue
+                    'rgba(0, 102, 204, 1)',   // Sky Blue
+                    'rgba(51, 153, 255, 1)',  // Light Blue
+                       // Bright Blue
+                    'rgba(0, 204, 255, 1)'    // Cyan
+                ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            // Chart 2: Sales by Item
+            const salesByItemCtx = document.getElementById("salesByItemChart").getContext("2d");
+    new Chart(salesByItemCtx, {
+        type: "bar",
+        data: {
+            labels: {{ sales_data['labels'] | tojson }},
+            datasets: [{
+                label: "Sales by Item",
+                data: {{ sales_data['values'] | tojson }},
+                backgroundColor: "rgba(0, 204, 255, 0.7)",
+                borderColor: "rgba(0, 204, 255, 1)",
+                borderWidth: 1
+            }]
+        }
+    });
+
+    // Chart 3: Quantity Sold Over Time
+    const quantityOverTimeCtx = document.getElementById("quantityOverTimeChart").getContext("2d");
+        new Chart(quantityOverTimeCtx, {
+            type: "line",
+            data: {
+                labels: {{ quantity_sold_data['labels'] | tojson }},
+                datasets: [{
+                    label: "Quantity Sold Over Time",
+                    data: {{ quantity_sold_data['values'] | tojson }},
+                    backgroundColor:'rgba(51, 153, 255, 0.7)',
+                    borderColor: 'rgba(51, 153, 255, 1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            }
+        });
+
+        // Chart 4: Top-Selling Items
+        const topSellingItemsCtx = document.getElementById("topSellingItemsChart").getContext("2d");
+        new Chart(topSellingItemsCtx, {
+            type: "bar",
+            data: {
+                labels: {{ top_selling_items['labels'] | tojson }},
+                datasets: [{
+                    label: "Top Selling Items",
+                    data: {{ top_selling_items['values'] | tojson }},
+                    backgroundColor: 'rgba(0, 128, 255, 0.7)',
+                    borderColor: 'rgba(0, 128, 255, 1)',
+                    borderWidth: 1
+                }]
+            }
+        });
+        // Chart 5: Sales Distribution
+        const salesDistributionCtx = document.getElementById("salesDistributionChart").getContext("2d");
+        new Chart(salesDistributionCtx, {
+            type: "pie",
+            data: {
+                labels: {{ sales_distribution_data['labels'] | tojson }},
+                datasets: [{
+                    label: "Sales Distribution",
+                    data: {{ sales_distribution_data['values'] | tojson }},
+                    backgroundColor: [
+                                    'rgba(0, 51, 102, 0.9)',
+                            'rgba(0, 128, 255, 0.8)',  // Deep Navy Blue (Completed)
+                    'rgba(0, 76, 153, 0.8)',  // Medium Blue (Cancelled)
+                    'rgba(0, 102, 204, 0.8)', // Sky Blue (Pending)
+                    'rgba(51, 153, 255, 0.7)', // Light Blue (Processing)
+                     // Bright Blue (Optional)
+                    'rgba(0, 204, 255, 0.7)'   // Cyan (Optional)
+                                ]
+                }]
+            }
+        });
+        
+        // Chart 6: Daily Sales Performance
+        const dailyPerformanceCtx = document.getElementById("dailyPerformanceChart").getContext("2d");
+        new Chart(dailyPerformanceCtx, {
+            type: "line",
+            data: {
+                labels: {{ daily_sales_data['labels'] | tojson }},
+                datasets: [{
+                    label: "Daily Revenue",
+                    data: {{ daily_sales_data['values'] | tojson }},
+                    backgroundColor: "rgba(0, 204, 255, 0.7)",
+                    borderColor: 'rgba(0, 204, 255, 1)',
+                    borderWidth: 2,
+                    fill: true
+                }]
+            }
+        });
+
+        });
+        </script>
+
+    </main>
+
+    {% include 'admin/admin_footer.html' %}
+</div>       

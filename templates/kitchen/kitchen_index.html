@@ -1,0 +1,254 @@
+{% include 'kitchen/kitchen_header.html' %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container-fluid px-4">
+            <h1 class="mt-4">Kitchen</h1>
+            <ol class="breadcrumb mb-4">
+                <li class="breadcrumb-item active">Dashboard</li>
+            </ol>
+
+            <!-- Display flash messages for success or error -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+            <div class="row">
+                <div class="col-xl-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-primary o-hidden h-100">
+                      <div class="card-body">
+                        <div class="card-body-icon-sale">
+                          <i class="fa fa-chart-line"></i>
+                        </div>
+                        <div class="mr-5"><b>₹ {{ total_sales_amount }} Total Sales</b></div>
+                      </div>
+                      <a class="card-footer text-white clearfix small z-1" href="{{ url_for('sales.sales_report') }}">
+                        <span class="float-left">View Details</span>
+                        <span class="float-right">
+                        </span>
+                      </a>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-success o-hidden h-100">
+                      <div class="card-body">
+                        <div class="card-body-icon-kit">
+                          <i class="fas fa-shopping-basket"></i>
+                        </div>
+                        <div class="mr-5"><b>{{ order_count }} Total Orders</b></div>
+                      </div>
+                      <a class="card-footer text-white clearfix small z-1" href="{{ url_for('order.kitchen_orders') }}">
+                        <span class="float-left">View Details</span>
+                        <span class="float-right">
+                          
+                        </span>
+                      </a>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-sm-6 mb-3">
+                    <div class="card text-white bg-info o-hidden h-100">
+                      <div class="card-body">
+                        <div class="card-body-icon-kit">
+                          <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="mr-5"><b> Wallet</b></div>
+                      </div>
+                      <a class="card-footer text-white clearfix small z-1" href="{{ url_for('wallet.view_wallet') }}">
+                        <span class="float-left">View Details</span>
+                        <span class="float-right">
+                          
+                        </span>
+                      </a>
+                    </div>
+                </div>
+            </div>
+            <br>
+            <!-- Totals Table -->
+            <br>
+            <div class="card1 shadow">
+                <div class="card-header1 py-3">
+                    <h6 class="font-weight-bold">SUMMARY</h6>
+                </div>
+                <table class="table table-striped table-bordered table-hover">
+                    <thead class="thead1 text-center">
+                        <tr>
+                            <th>Total Sales (₹)</th>
+                            <th>Quantity Sold</th>
+                            <th>Total Orders</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        <td>₹ {{ total_sales_amount }}</td>
+                        <td>{{ total_quantity_sold }}</td>
+                        <td>{{ total_orders_count }}</td>
+                    </tbody>
+                </table>
+            </div>
+            <br>
+            <br>
+            <!-- Sales Data Table -->
+            <div class="card1 shadow">
+                <div class="card-header1 py-3">
+                    <h6 class="font-weight-bold">Sales Data Table</h6>
+                </div>
+                <table class="table table-striped table-bordered table-hover" id="OrderTable">
+                    <thead class="thead1 text-center">
+                        <tr>
+                            <th>Sale ID</th>
+                            <th>Product Name</th>
+                            <th>Price (₹)</th>
+                            <th>Quantity</th>
+                            <th>Sale Date</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        {% if sales %}
+                        {% for sale in sales %}
+                            {% for item in sale.orders.order_items %}
+                                <tr>
+                                    <td>{{ sale.sale_id }}</td>
+                                    <td>{{ item.food_item.item_name }}</td>
+                                    <td>₹ {{ item.price }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>{{ sale.datetime.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center">No sales data available</td>
+                        </tr>
+                    {% endif %}
+                    </tbody>
+                </table>
+                 <!-- Pagination Controls -->
+                 <div class="d-flex float-right" id="pagination-controls"></div>
+            </div>
+            <br>
+            <!--<ol class="breadcrumb mt-5 mb-2">
+                <li class="breadcrumb-item active">Statistics</li>
+            </ol>
+                    <div class="chart-container1 mt-2 mb-4">
+                        <div class="chart-wrapper1">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper1">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div> -->
+            <br>
+            <script>
+                // Data from the backend route
+                const orderDates = {{ order_dates | safe }};
+                const orderCountsPerDate = {{ order_count_per_date | safe }};
+                const salesPerDate = {{ sales_per_date | safe }};
+            
+                // Bar Chart for Orders by Date (Last 30 Days)
+                const barCtx = document.getElementById('barChart').getContext('2d');
+                const barChart = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: orderDates,
+                        datasets: [{
+                            label: 'Number of Orders',
+                            data: orderCountsPerDate,
+                            backgroundColor: 'rgba(135, 206, 250, 0.6)', // Skyblue
+                            borderColor: 'rgba(135, 206, 250, 1)',
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true },
+                            title: { display: true, text: 'Orders by Date (Last 30 Days)' }
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Date' },
+                                ticks: { maxRotation: 90, minRotation: 45 },
+                                barPercentage: 0.8,
+                                categoryPercentage: 0.8
+                            },
+                            y: {
+                                title: { display: true, text: 'Number of Orders' },
+                                beginAtZero: true
+                            }
+                        },
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutBounce',
+                        }
+                    }
+                });
+            
+                // Pie Chart for Sales by Date (Last 30 Days)
+                const pieCtx = document.getElementById('pieChart').getContext('2d');
+                const pieChart = new Chart(pieCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: orderDates,
+                        datasets: [{
+                            label: 'Sales Amount',
+                            data: salesPerDate,
+                            backgroundColor: [
+                                'rgba(255, 99, 132, 0.6)',   // Pink
+                                'rgba(54, 162, 235, 0.6)',   // Blue
+                                'rgba(255, 206, 86, 0.6)',   // Yellow
+                                'rgba(75, 192, 192, 0.6)',   // Green
+                                'rgba(153, 102, 255, 0.6)',  // Purple
+                                'rgba(255, 159, 64, 0.6)',   // Orange
+                                'rgba(255, 105, 180, 0.6)',  // Hotpink
+                                'rgba(0, 255, 255, 0.6)',    // Cyan
+                                'rgba(240, 128, 128, 0.6)',  // Lightcoral
+                                'rgba(128, 128, 128, 0.6)'   // Gray
+                            ],
+                            hoverBackgroundColor: [
+                                'rgba(255, 99, 132, 0.8)',
+                                'rgba(54, 162, 235, 0.8)',
+                                'rgba(255, 206, 86, 0.8)',
+                                'rgba(75, 192, 192, 0.8)',
+                                'rgba(153, 102, 255, 0.8)',
+                                'rgba(255, 159, 64, 0.8)',
+                                'rgba(255, 105, 180, 0.8)',
+                                'rgba(0, 255, 255, 0.8)',
+                                'rgba(240, 128, 128, 0.8)',
+                                'rgba(128, 128, 128, 0.8)'
+                            ],
+                            borderWidth: 1,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { 
+                                display: true, 
+                                position: 'top' 
+                            },
+                            title: { 
+                                display: true, 
+                                text: 'Sales Amount by Date (Last 30 Days)' 
+                            }
+                        },
+                        animation: {
+                            duration: 1500,
+                            easing: 'easeOutCubic',
+                        }
+                    }
+                });
+            </script>
+        </div>
+    </main>
+{% include 'sd_footer.html' %}
