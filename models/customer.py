@@ -5,6 +5,7 @@ import pytz
 
 ###################################### Customer Model #################################################
 class Customer(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'customers'
     
     id = db.Column(db.Integer, primary_key=True)

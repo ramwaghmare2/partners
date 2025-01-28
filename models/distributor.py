@@ -7,6 +7,7 @@ import pytz
 
 ###################################### Distributor Model ##############################################
 class Distributor(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'distributors'
     
     id = db.Column(db.Integer, primary_key=True)

@@ -6,6 +6,7 @@ import pytz
 
 ###################################### SuperDistributor Model #########################################
 class SuperDistributor(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'super_distributors'
     
     id = db.Column(db.Integer, primary_key=True)
