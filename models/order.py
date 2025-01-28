@@ -5,6 +5,7 @@ import pytz
 
 ###################################### Order Model ####################################################
 class Order(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'orders'
 
     order_id = db.Column(db.Integer, primary_key=True)
@@ -28,6 +29,7 @@ class Order(db.Model):
 
 ###################################### OrderItem Model ################################################
 class OrderItem(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'order_items'
 
     order_item_id = db.Column(db.Integer, primary_key=True)

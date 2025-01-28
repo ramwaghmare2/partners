@@ -5,6 +5,7 @@ import pytz
 
 ###################################### Notification Model #############################################
 class Notification(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'notifications'
 
     id = db.Column(db.Integer, primary_key=True)

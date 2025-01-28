@@ -10,6 +10,7 @@ def kolkata_time(): # Use pytz for timezone-aware datetime
     return naive_dt
 
 class ActivityLog(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'activity_logs'
 
     id = db.Column(db.Integer, primary_key=True)

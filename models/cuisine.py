@@ -6,6 +6,7 @@ import pytz
 
 ###################################### Cuisine Model ##################################################
 class Cuisine(db.Model):
+    __bind_key__ = 'partners_db'
     __tablename__ = 'cuisines'
     
     id = db.Column(db.Integer, primary_key=True)
