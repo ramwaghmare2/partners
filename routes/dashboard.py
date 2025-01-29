@@ -4,7 +4,7 @@ from flask import Blueprint, request, session, render_template
 from utils.services import get_image, get_user_query, ROLE_MODEL_MAP
 from utils.notification_service import check_notification
 from datetime import datetime, timedelta, timezone
-from models.order import OrderItem
+from models.order_item import OrderItem
 from .admin import role_required
 from flask_socketio import emit
 from sqlalchemy import func

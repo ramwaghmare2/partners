@@ -1,0 +1,15 @@
+###################################### Importing Required Libraries ###################################
+"""from extensions import db"""
+
+###################################### Cuisine Model ##################################################
+"""
+class Cuisine(db.Model):
+    __bind_key__ = 'customer_db'
+    __tablename__ = 'cuisines'
+    cuisine_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.Enum('Veg', 'Non-Veg'), nullable=False)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
+
+    ############################ Relationship with MenuItem ###########################################
+    menu_items = db.relationship('MenuItem', backref='cuisine', lazy=True)"""

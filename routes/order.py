@@ -6,7 +6,7 @@ from werkzeug.exceptions import NotFound
 from datetime import datetime, timedelta
 from utils.services import get_image
 from models import FoodItem, Order
-from models.order import db
+from models.order_item import db
 from base64 import b64encode
 from sqlalchemy import or_
 

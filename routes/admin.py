@@ -5,7 +5,7 @@ from utils.services import get_image, get_user_query
 from datetime import datetime, timedelta
 from utils.notification_service import check_notification
 from collections import defaultdict
-from models.order import OrderItem
+from models.order_item import OrderItem
 from sqlalchemy import func ,desc
 from .user_routes import role_required
 from sqlalchemy import and_

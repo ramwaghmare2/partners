@@ -6,7 +6,6 @@ import pytz
 
 ###################################### FoodItem Model #################################################
 class FoodItem(db.Model):
-    __bind_key__ = 'partners_db'
     __tablename__ = 'food_items'
     
     id = db.Column(db.Integer, primary_key=True)

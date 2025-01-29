@@ -5,11 +5,10 @@ import pytz
 
 ###################################### Notification Model #############################################
 class Notification(db.Model):
-    __bind_key__ = 'partners_db'
     __tablename__ = 'notifications'
 
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False)  # Foreign Key to Users
+    customer_id = db.Column(db.Integer, nullable=False)  # Foreign Key to Users
     role = db.Column(db.String(50), nullable=True)   # Role (Admin, Manager, etc.)
     notification_type = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=False)
@@ -20,7 +19,7 @@ class Notification(db.Model):
     def to_dict(self):
         return {
             'id': self.id,
-            'user_id': self.user_id,
+            'customer_id': self.customer_id,
             'role': self.role,
             'notification_type': self.notification_type,
             'description': self.description,

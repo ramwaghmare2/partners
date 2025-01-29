@@ -1,0 +1,30 @@
+###################################### Importing Required Libraries ###################################
+"""
+from extensions import db
+from datetime import datetime
+"""
+###################################### MenuItem Model #################################################
+"""
+class MenuItem(db.Model):
+    __bind_key__ = 'customer_db'
+    __tablename__ = 'menu_items'
+    item_id = db.Column(db.Integer, primary_key=True)
+    restaurant_id = db.Column(db.Integer, db.ForeignKey('restaurants.restaurant_id'), nullable=False)
+    cuisine_id = db.Column(db.Integer, db.ForeignKey('cuisines.cuisine_id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    price = db.Column(db.Numeric(10, 2), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    food_items = db.Column(db.String(255), nullable=False) #New Column
+    inventory_level = db.Column(db.Integer, default=0) #New Column
+    food_image = db.Column(db.BLOB(100), nullable=False)
+    rating = db.Column(db.String(10), nullable=False)
+
+    # Define relationships
+    order_items = db.relationship('OrderItem', backref='menu_item', lazy=True)
+    reviews = db.relationship('Review', backref='menu_item', lazy=True)
+
+    def __repr__(self):
+        return f'<MenuItem {self.name}>'
+"""

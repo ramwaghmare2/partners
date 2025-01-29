@@ -1,22 +1,20 @@
 ###################################### Importing Required Libraries ###################################
+from sqlalchemy import create_engine, MetaData, Table
 import os
 
 ###################################### Configuration Class ############################################
 class Config:
 
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key')
-
-    PARTNERS_DB = os.getenv('PARTNERS_DB_URL', 'mysql+pymysql://root:root@localhost/hierarchical_db')
-    CUSTOMER_DB = os.getenv('CUSTOMER_DB_URL', 'mysql+pymysql://root:root@localhost/sample_fd')
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA')  # Database connection string for SQLAlchemy
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    SQLALCHEMY_BINDS = {
-        'partners_db': PARTNERS_DB,
-        'customer_db': CUSTOMER_DB
-    }
-
+"""engine = create_engine(SQLALCHEMY_DATABASE_URI)
+    metadata = MetaData()
+    metadata.reflect(bind=engine)
+    
     CELERY_BROKER_URL = 'mysql+pymysql://root:root@localhost/hierarchical_db'  # Celery broker URL (could still be Redis/RabbitMQ, but MySQL for result backend)
     CELERY_RESULT_BACKEND = 'db+mysql://root:root@localhost/hierarchical_db'  # Use MySQL for the result backend (same as the main database)
     CELERY_ACCEPT_CONTENT = ['json']  # Celery will accept JSON formatted tasks
-    CELERY_TASK_SERIALIZER = 'json'  # Serialize tasks in JSON format
+    CELERY_TASK_SERIALIZER = 'json'  # Serialize tasks in JSON format"""
