@@ -7,7 +7,6 @@ import pytz
 
 ###################################### Admin Model ####################################################
 class Admin(db.Model):
-    __bind_key__ = 'partners_db'
     __tablename__ = 'admins'
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

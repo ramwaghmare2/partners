@@ -1,0 +1,56 @@
+###################################### Importing Required Libraries ###################################
+from extensions import db
+from datetime import datetime, timedelta
+from random import randint
+import pickle
+import numpy as np
+
+###################################### Restaurant Model ###############################################
+class Restaurant(db.Model):
+    __bind_key__ = 'customer_db'
+    __tablename__ = 'restaurants'
+    restaurant_id = db.Column(db.Integer, primary_key=True)
+    rest_name = db.Column(db.String(100), nullable=False)
+    owner_name = db.Column(db.String(100), nullable=False)
+    mobile_number = db.Column(db.String(20), unique=True, nullable=False)
+    address = db.Column(db.String(255), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(512), nullable=False)
+    otp = db.Column(db.String(6))
+    otp_expiry = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    ######################## Relationship with Cuisine, MenuItem, Order and Review ####################
+    cuisines = db.relationship('Cuisine', backref='restaurant', lazy=True)
+    menu_items = db.relationship('MenuItem', backref='restaurant', lazy=True)
+    orders = db.relationship('Order', backref='restaurant', lazy=True)
+    reviews = db.relationship('Review', backref='restaurant', lazy=True)
+
+    ###################################### OTP Generation Function ####################################
+    def generate_otp(self):
+        """Generate and save OTP with an expiration time."""
+        self.otp = f"{randint(100000, 999999)}"
+        self.otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+
+    ###################################### Function For OTP Verification ##############################
+    def verify_otp(self, otp):
+        """Verify the OTP."""
+        return self.otp == otp and datetime.utcnow() < self.otp_expiry
+
+
+###################################### XGBoost Model ##################################################
+class XGBoostModel:
+    def __init__(self):
+
+        with open(r'ml_model/xgb_model.pkl', 'rb') as f:
+            self.model = pickle.load(f)
+
+    def predict(self, input_data):
+
+        data = np.array(input_data)
+        if data.ndim == 1:
+            data = data.reshape(1, -1)
+        predictions = self.model.predict(data)
+        return predictions
+

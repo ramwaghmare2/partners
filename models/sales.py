@@ -5,7 +5,6 @@ import pytz
 
 ###################################### Sales Model ####################################################
 class Sales(db.Model):
-    __bind_key__ = 'partners_db'
     __tablename__ = 'sales'
 
     sale_id = db.Column(db.Integer, primary_key=True, autoincrement=True)

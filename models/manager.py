@@ -7,7 +7,6 @@ import pytz
 
 ###################################### Manager Model ##################################################
 class Manager(db.Model):
-    __bind_key__ = 'partners_db'
     __tablename__ = 'managers'
     
     id = db.Column(db.Integer, primary_key=True)
