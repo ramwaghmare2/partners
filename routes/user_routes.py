@@ -212,6 +212,7 @@ def login():
 
     except Exception as e:
         flash(f"{handle_error(e)}.", 'danger')
+        print(e)
         return redirect(url_for('user_bp.login'))
 
 ################################## Logout Route  ##################################
