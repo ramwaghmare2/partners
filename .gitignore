@@ -1,3 +1,9 @@
 *.pyc
 __pycache__/
 __pycache__/
+
+# VENV
+/partners/
+
+# Migrations
+/migrations/

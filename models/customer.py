@@ -22,7 +22,7 @@ class Customer(db.Model):
 
     ############################### Relationship with Order and Review ################################
     orders = db.relationship('Order', backref='customer', lazy=True)
-    reviews = db.relationship('Review', backref='customer', lazy=True)
+    reviews = db.relationship('Review', back_populates='user', lazy=True)
 
     ###################################### OTP Generation Function ####################################
     def generate_otp(self):

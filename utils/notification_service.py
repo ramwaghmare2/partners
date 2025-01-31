@@ -43,7 +43,7 @@ def get_notification_targets(creator_role, target_role=None):
 ###################################### Create Notification ############################################
 def create_notification(user_id, role, notification_type, description):
     notification = Notification(
-        user_id=user_id,
+        customer_id=user_id,
         role=role,
         notification_type=notification_type,
         description=description,
@@ -75,7 +75,7 @@ def check_notification(role, user_id):
                 ).all()
     else:    
         notification_check = Notification.query.filter(
-                    Notification.user_id == user_id,
+                    Notification.customer_id == user_id,
                     Notification.is_read == 0,
                     Notification.role == role
                 ).all()  

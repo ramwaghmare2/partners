@@ -10,7 +10,7 @@ class Review(db.Model):
     __tablename__ = 'reviews'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('customer.customer_id'), nullable=False)
-    restaurant_id = db.Column(db.Integer, db.ForeignKey('kitchens.id'), nullable=False)
+    kitchen_id = db.Column(db.Integer, db.ForeignKey('kitchens.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('food_items.id'), nullable=True)
     rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
