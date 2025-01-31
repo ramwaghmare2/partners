@@ -27,7 +27,7 @@ def get_notifications():
         if role:
             query = query.filter(Notification.role == role)
         if user_id:
-            query = query.filter(Notification.user_id == user_id)
+            query = query.filter(Notification.customer_id == user_id)
         if start_date:
             query = query.filter(Notification.created_at >= start_date)
         if end_date:
