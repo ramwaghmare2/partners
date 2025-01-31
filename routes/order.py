@@ -456,7 +456,7 @@ def kitchen_orders( ):
                 'kitchen_name': order.kitchen.name,
                 'total_amount': order.total_amount,
                 'status': order.order_status,
-                'customer_name': f"{order.customer.name}",
+                'customer_name': f"{order.customer.first_name} {order.customer.last_name}",
                 'created_at': order.created_at,
                 'updated_at': order.updated_at,
                 'items': [
@@ -652,3 +652,7 @@ def delete_item_cart(item_id):
     except Exception as e:
         flash(f"Unexpected Error: {str(e)}")
         return redirect(url_for('ccustomer.customer_dashboard'))
+
+
+
+        

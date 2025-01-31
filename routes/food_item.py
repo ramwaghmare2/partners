@@ -24,6 +24,8 @@ def add_food_item():
         price = request.form['price']
         cuisine_id = request.form['cuisine_id']
         image = request.files.get('image')  # Get the image from the form
+        rating = request.form['rating']
+
 
         if len(description.split()) > 30:
             flash('Description is too long, Wirte in 20 words!', 'danger')
@@ -40,7 +42,8 @@ def add_food_item():
                 price=price,
                 cuisine_id=cuisine_id,
                 kitchen_id=user_id,
-                image=image_binary
+                image=image_binary,
+                rating=rating
             )
             db.session.add(new_food_item)
             db.session.commit()

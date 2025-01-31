@@ -31,6 +31,7 @@ class Kitchen(db.Model):
     food_items = db.relationship('FoodItem', backref='kitchen', lazy=True)
     sales = db.relationship('Sales', backref='kitchen', lazy=True)
     reviews = db.relationship('Review', back_populates='restaurant', lazy=True)
+    orders = db.relationship('Order', backref='kitchen', lazy=True)
 
 
     ###################################### Function for setting password ##############################
