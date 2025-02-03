@@ -15,6 +15,8 @@ class Sales(db.Model):
     payment_mode = db.Column(db.Enum('COD', 'UPI', 'Credit Card', 'Debit Card'), nullable=True)
     datetime = db.Column(db.DateTime, default=lambda: datetime.now(pytz.timezone('Asia/Kolkata')))
 
+    orders = db.relationship('Order', backref='sales')
+
     ###################################### Sales Model Constructor ####################################
     def __repr__(self):
         return f'<Sales sale_id={self.sale_id}, order_id={self.order_id}>'

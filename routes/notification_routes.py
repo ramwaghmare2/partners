@@ -61,7 +61,7 @@ def mark_as_read(id):
             notification.is_read = True
             db.session.commit()
             return redirect(url_for('notification.get_notifications'))
-        elif notification and session.get('user_id') == notification.user_id:
+        elif notification and session.get('user_id') == notification.customer_id:
             notification.is_read = True
             db.session.commit()
             return redirect(url_for('notification.get_notifications'))
