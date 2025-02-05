@@ -1,0 +1,125 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager/manager_header.html' %}
+{% elif role == 'Kitchen' %}
+    {% include 'kitchen/kitchen_header.html' %}
+{% endif %}
+
+<div id="layoutSidenav_content">
+    <div class="container mt-4">
+        <h1 class="text-center mb-4 font-weight-bold">Cuisines</h1>
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show text-center" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        {% if cuisines %}
+            <div class="container mt-4">
+                <div class="row justify-content-center">
+                    {% for cuisine in cuisines %}
+                        <div class="col-md-4 mb-4">
+                            <div class="card shadow-lg rounded-lg" style="width: 100%; height: 100%;">
+                                <!-- Cuisine Image -->
+                                <img src="{{ cuisine.image_base64 }}" class="card-img-top rounded-top" alt="{{ cuisine.name }}" style="height: 200px; object-fit: cover;">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title text-center text-primary font-weight-bold">{{ cuisine.name }}</h5>
+                                    
+                                    <!-- Clickable truncated description -->
+                                    <p class="card-text text-muted" style="max-height: 3em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; cursor: pointer;"
+                                    data-toggle="modal" data-target="#descriptionModal{{ cuisine.id }}">
+                                        {{ cuisine.description }}
+                                    </p>
+                                    
+                                    <!-- Action Buttons -->
+                                    <div class="mt-auto card-footer border-0 d-flex justify-content-end mt-auto">
+                                        <a href="{{ url_for('cuisine.edit_cuisine', id=cuisine.id) }}" class="btn btn-sm btn-warning mx-2" data-toggle="tooltip" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-danger mx-2" data-toggle="modal" data-target="#deleteModal{{ cuisine.id }}" data-toggle="tooltip" title="Delete">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Delete Confirmation Modal -->
+                        <div class="modal fade" id="deleteModal{{ cuisine.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ cuisine.id }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white"  style="background-color: #003366;">
+                                        <h5 class="modal-title" id="deleteModalLabel{{ cuisine.id }}">Confirm Deletion</h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                        Are you sure you want to delete "<b>{{ cuisine.name }}</b>"?
+                                    </div>
+                                    <div class="modal-footer justify-content-center">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                                        <a href="{{ url_for('cuisine.delete_cuisine', id=cuisine.id) }}" class="btn btn-danger">Delete</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description Modal -->
+                        <div class="modal fade" id="descriptionModal{{ cuisine.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white" style="background-color: #003366;">
+                                        <h5 class="modal-title">{{ cuisine.name }}</h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h6 class="text-muted">Description:</h6>
+                                        <p>{{ cuisine.description }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="{{ url_for('cuisine.edit_cuisine', id=cuisine.id) }}" class="btn btn-warning" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <!-- No Cuisine Available Message -->
+            <div class="alert text-center">
+                <p class="fs-4 text-muted">
+                    <img src="{{ url_for('static', filename='images/gourmet.gif') }}" alt="No Data Available" style="width: 100px; height: 100px;">
+                    <br> No Cuisines Available
+                </p>
+            </div>
+        {% endif %}
+    </main>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap JS and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {% include 'sd_footer.html' %}
+</div>

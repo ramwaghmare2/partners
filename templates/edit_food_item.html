@@ -1,34 +1,95 @@
-
 {% include 'kitchen/kitchen_header.html' %}
 
-<body>
 <div id="layoutSidenav_content">
     <main>
-        <!-- Add Doctor Form Content Here -->
-        <div class="sd-container">
-            <h2 class="sd-form">Edit Food Item</h2>
-            <form method="post" href="url_for('food_item.edit_food_item',id=food_items.id)" class="sd-form" enctype="multipart/form-data">
-                <div class="sd-row">
-                    <input name="name" type="text" value="{{ food_items.item_name }}" required>
-                </div>
-                <div class="sd-row">
-                    <input name="description" type="text" value="{{ food_items.description }}" required>
-                </div>
-                <div class="sd-row">
-                    <input name="price" type="text" value="{{ food_items.price }}" required>
-                </div>
-                <div class="sd-row">
-                    <label for="image">Food Image</label>
-                    <input type="file" class="form-control-file" id="image" name="image">
-                </div>
-                <br>
-                <div class="sd-buttons">
-                    <button type="submit" class="sd-submit">Update food item</button>
-                </div>
-            </form>
-        </div>
-        <!-- End of Add Doctor Form Content -->
-    </main>
-</body>
+        <br>
+        <br>
+        <div class="container d-flex justify-content-center">
+            <div class="card shadow-lg p-4" style="width: 40rem; background: #fff; border-radius: 10px;">
+                <h2 class="text-center text-dark mb-4">🍽️ Edit Food Item</h2>
 
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <form method="POST" action="{{ url_for('food_item.edit_food_item', id=food_items.id) }}" enctype="multipart/form-data">
+                    
+                    <!-- Food Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Food Name</label>
+                        <input name="name" type="text" class="form-control" value="{{ food_items.item_name }}" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3" required>{{ food_items.description }}</textarea>
+                    </div>
+
+                    <!-- Price -->
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <input name="price" type="text" class="form-control" value="{{ food_items.price }}" required>
+                    </div>
+
+                    <!-- Current Image Preview -->
+                    <div class="row mb-3">
+                        <!-- Current Food Image -->
+                        <div class="col-md-4">
+                            <label class="form-label">Current Food Image</label><br>
+                            {% if encoded_image %}
+                                <img id="imagePreview" src="data:image/jpeg;base64,{{ encoded_image }}" 
+                                     class="img-thumbnail mt-2" style="max-width: 150px; border-radius: 10px; display: block;">
+                            {% else %}
+                                <p>No image available</p>
+                            {% endif %}
+                        </div>
+                    
+                        <!-- Upload New Image -->
+                        <div class="col-md-8">
+                            <label class="form-label">Upload New Image</label>
+                            <input type="file" class="form-control" id="image" name="image" onchange="previewImage(event)">
+                        </div>
+                    </div>
+                    
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-center mt-4">
+                        <button style="background: linear-gradient(135deg, #003366, #0055aa);" 
+                                type="submit" class="btn btn-lg text-white me-3">
+                            Update Food Item
+                        </button>
+                        <a href="{{ url_for('food_item.get_food_items_by_kitchen', kitchen_id=user_id) }}" 
+                           class="btn btn-lg btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <br>
 {% include 'sd_footer.html' %}
+    </main>
+</div>
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>
+
