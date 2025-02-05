@@ -4,7 +4,7 @@ from utils.notification_service import check_notification, create_notification
 from utils.services import allowed_file, get_image, get_user_query
 from models import db, FoodItem ,Cuisine
 from base64 import b64encode
-
+import base64
 ###################################### Blueprint For Food Item ########################################
 food_item_bp = Blueprint('food_item', __name__)
 
@@ -115,49 +115,49 @@ def get_food_items_by_kitchen(kitchen_id):
 def edit_food_item(id):
     # Retrieve the food item by ID
     food_items = FoodItem.query.get_or_404(id)
-    user_id= session.get('user_id')
+    user_id = session.get('user_id')
     role = session.get('role')
     user = get_user_query(role, user_id)
-    image_data = get_image(role, user_id)
 
     if request.method == 'POST':
         name = request.form.get('name')
-        descrption = request.form.get('description')
+        description = request.form.get('description')
         price = request.form.get('price')
-        image = request.files.get('image')  # Get the image from the form
+        image = request.files.get('image')  # Get uploaded image
 
-        image_binary = None
+        # Convert image to binary if a new file is uploaded
         if image and allowed_file(image.filename):
-            image_binary = image.read()
+            food_items.image = image.read()  # Read as binary
 
-        # Update food item with the form data
+        # Update other fields
         food_items.item_name = name
-        food_items.description = descrption
+        food_items.description = description
         food_items.price = price
-        if image_binary:
-            food_items.image = image_binary
-        
-        # Commit the changes to the database
+
         db.session.commit()
 
-        create_notification(user_id=user.id, 
-                                role=role, 
-                                notification_type='Edit', 
-                                description=f'{user.name}, the {role}, has Successfully edited {food_items.item_name}.')
+        create_notification(
+            user_id=user.id, 
+            role=role, 
+            notification_type='Edit', 
+            description=f'{user.name}, the {role}, has successfully edited {food_items.item_name}.'
+        )
 
-        # Flash success message
         flash('Food item updated successfully!', 'success')
-        
-        return redirect(url_for('food_item.get_food_items_by_kitchen',kitchen_id=user_id))
+        return redirect(url_for('food_item.get_food_items_by_kitchen', kitchen_id=user_id))
 
-    # If it's a GET request, render the edit form with the current data
+    # Convert binary image data to Base64 string for display
+    encoded_image = None
+    if food_items.image:
+        encoded_image = base64.b64encode(food_items.image).decode('utf-8')
+
+    # Render the form with current data
     return render_template('edit_food_item.html',
                            food_items=food_items,
                            user_id=user_id,
                            role=role,
-                           encoded_image=image_data,
+                           encoded_image=encoded_image,
                            user_name=user.name)
-
 ###################################### Delete a FoodItem by ID ########################################
 @food_item_bp.route('/food_items/delete/<int:item_id>', methods=['GET'])
 def delete_food_item(item_id):

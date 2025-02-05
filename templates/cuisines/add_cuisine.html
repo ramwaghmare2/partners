@@ -1,0 +1,61 @@
+{% if role == 'Admin' %}
+    {% include 'admin/admin_header.html' %}
+{% elif role == 'Manager' %}
+    {% include 'manager/manager_header.html' %}
+{% elif role == 'Kitchen' %}
+    {% include 'kitchen/kitchen_header.html' %}
+{% endif %}
+
+<div id="layoutSidenav_content">
+    <br>
+    <main>
+        <div class="container d-flex justify-content-center">
+            <div class="card shadow-lg p-4" style="width: 40rem; background: #fff; border-radius: 10px;">
+                <h2 class="text-center text-dark mb-4">🍽️ Add Cuisine</h2>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% endwith %}
+                
+                <form action="{{ url_for('cuisine.add_cuisine') }}" method="post" enctype="multipart/form-data">
+                    <!-- Cuisine Name -->
+                    <div class="mb-3">
+                        <label class="form-label">Cuisine Name</label>
+                        <input name="name" type="text" class="form-control" placeholder="e.g., Italian, Chinese, Indian" required>
+                    </div>
+
+                    <!-- Cuisine Description -->
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" placeholder="Enter a short description of the cuisine (max 100 words)"></textarea>
+                    </div>
+
+                    <!-- Image Upload -->
+                    <div class="mb-3">
+                        <label class="form-label">Upload Image</label>
+                        <input type="file" class="form-control" id="image" name="image">
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="d-flex justify-content-center">
+                        <button style="background: linear-gradient(135deg, #003366, #0055aa);" type="submit" class="btn btn-lg text-white">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    <br>
+    
+    {% include 'sd_footer.html' %}
+</div>
