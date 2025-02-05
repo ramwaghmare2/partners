@@ -72,20 +72,32 @@ def add_food_item():
 ###################################### Create a New FoodItem ##########################################
 @food_item_bp.route('/food_items/<int:kitchen_id>', methods=['GET'])
 def get_food_items_by_kitchen(kitchen_id):
-    user_id=session.get('user_id')
+    user_id = session.get('user_id')
     role = session.get('role')
     image_data = get_image(role, user_id)
     user = get_user_query(role, user_id)
     notification_check = check_notification(role, user_id)
-    # Query to get food items for the given kitchen_id
-    food_items = FoodItem.query.filter_by(kitchen_id=kitchen_id).all()
+
+    # Get cuisine_id from query parameters (optional filter)
+    cuisine_id = request.args.get('cuisine_id', type=int)
+
+    # Query to get food items for the given kitchen_id, with optional cuisine filter
+    if cuisine_id:
+        food_items = FoodItem.query.filter_by(kitchen_id=kitchen_id, cuisine_id=cuisine_id).all()
+    else:
+        food_items = FoodItem.query.filter_by(kitchen_id=kitchen_id).all()
+
     # Convert images to Base64 format
     for food in food_items:
-            if food.image:
-                food.image_base64 = f"data:image/jpeg;base64,{b64encode(food.image).decode('utf-8')}"
-            else:
-                food.image_base64 = None
-    # Render the template with the food items
+        if food.image:
+            food.image_base64 = f"data:image/jpeg;base64,{b64encode(food.image).decode('utf-8')}"
+        else:
+            food.image_base64 = None
+
+    # Get all cuisines for filtering dropdown
+    cuisines = Cuisine.query.all()
+
+    # Render the template with the food items and cuisines
     return render_template('food_item.html',
                            food_items=food_items,
                            kitchen_id=kitchen_id,
@@ -93,7 +105,10 @@ def get_food_items_by_kitchen(kitchen_id):
                            encoded_image=image_data,
                            user_name=user.name,
                            role=role,
-                           notification_check=len(notification_check))
+                           notification_check=len(notification_check),
+                           cuisines=cuisines,
+                           selected_cuisine=cuisine_id)
+
 
 ###################################### Update a FoodItem by ID ########################################
 @food_item_bp.route('/food_items/edit/<int:id>', methods=['GET', 'POST'])
@@ -163,3 +178,6 @@ def delete_food_item(item_id):
 
     flash('Food item deleted successfully', 'danger')
     return redirect(url_for('food_item.get_food_items_by_kitchen', kitchen_id=kitchen_id))
+    
+
+    
