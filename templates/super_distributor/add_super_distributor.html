@@ -24,7 +24,7 @@
                     {% endfor %}
                 {% endif %}
             {% endwith %}
-            <form action="{{ url_for('super_distributor.add_super_distributor') }}" method="post" class="sd-form">
+            <form enctype="multipart/form-data" action="{{ url_for('super_distributor.add_super_distributor') }}" method="post" class="sd-form">
                 <div class="sd-row">
                     <input name="name" type="text" placeholder="Super Distributor Name" required>
                 </div>

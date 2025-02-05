@@ -223,6 +223,7 @@ def add_super_distributor():
 
         if request.method == 'POST':
             image = request.files.get('image')
+            print(image,"image")
 
             image_binary = None
             if image and allowed_file(image.filename):
