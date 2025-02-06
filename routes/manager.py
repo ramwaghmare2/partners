@@ -9,6 +9,7 @@ from models.manager import db, Manager
 from extensions import bcrypt
 from base64 import b64encode
 import logging
+import base64
 
 ###################################### Blueprint For Manager ##########################################
 manager_bp = Blueprint('manager', __name__,template_folder='../templates/manager', static_folder='../static')
@@ -143,15 +144,19 @@ def edit_manager(manager_id):
     role = session.get('role')
     image_data = get_image(role, user_id)
     user = get_user_query(role, user_id)
+    manager_image = None  # Initialize the variable at the start
 
     if isinstance(role, bytes):
         role = role.decode('utf-8')
     # if isinstance(user_name, bytes):
     #     user_name = user_name.decode('utf-8')
-
+    
     
     notification_check = check_notification(role, user_id)
 
+    if manager.image:
+        manager_image = base64.b64encode(manager.image).decode('utf-8')
+       
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
@@ -185,8 +190,7 @@ def edit_manager(manager_id):
             # Convert the image to binary data
             image_binary = image.read()
             manager.image = image_binary
-            
-
+        
         try:
             db.session.commit()
 
@@ -207,6 +211,7 @@ def edit_manager(manager_id):
                             role=role,
                             user_name=user.name,
                             encoded_image=image_data,
+                            manager_image=manager_image,
                             notification_check=len(notification_check))
 
 

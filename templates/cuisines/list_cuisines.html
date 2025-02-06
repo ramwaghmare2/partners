@@ -9,7 +9,7 @@
 <div id="layoutSidenav_content">
     <div class="container mt-4">
         <h1 class="text-center mb-4 font-weight-bold">Cuisines</h1>
-        
+        <hr>
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -44,12 +44,14 @@
                                     </p>
                                     
                                     <!-- Action Buttons -->
-                                    <div class="mt-auto card-footer border-0 d-flex justify-content-end mt-auto">
+                                    <div class="mt-auto card-footer border-0 text-center">
                                         <a href="{{ url_for('cuisine.edit_cuisine', id=cuisine.id) }}" class="btn btn-sm btn-warning mx-2" data-toggle="tooltip" title="Edit">
                                             <i class="fas fa-edit"></i>
+                                            Edit
                                         </a>
                                         <button class="btn btn-sm btn-danger mx-2" data-toggle="modal" data-target="#deleteModal{{ cuisine.id }}" data-toggle="tooltip" title="Delete">
                                             <i class="fas fa-trash-alt"></i>
+                                            Delete
                                         </button>
                                     </div>
                                     
@@ -95,6 +97,7 @@
                                     <div class="modal-footer">
                                         <a href="{{ url_for('cuisine.edit_cuisine', id=cuisine.id) }}" class="btn btn-warning" title="Edit">
                                             <i class="fas fa-edit"></i>
+                                            Edit
                                         </a>
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                                     </div>
