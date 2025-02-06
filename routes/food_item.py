@@ -60,7 +60,7 @@ def add_food_item():
             db.session.rollback()
             flash(f'Error: {e}', 'error')
     cuisines = Cuisine.query.all()  # Fetch all cuisines for the dropdown
-    return render_template('add_food_item.html',
+    return render_template('food_items/add_food_item.html',
                            cuisines=cuisines,
                            user_id=user_id,
                            encoded_image=image_data,
@@ -98,7 +98,7 @@ def get_food_items_by_kitchen(kitchen_id):
     cuisines = Cuisine.query.all()
 
     # Render the template with the food items and cuisines
-    return render_template('food_item.html',
+    return render_template('food_items/food_item.html',
                            food_items=food_items,
                            kitchen_id=kitchen_id,
                            user_id=user_id,
@@ -152,7 +152,7 @@ def edit_food_item(id):
         encoded_image = base64.b64encode(food_items.image).decode('utf-8')
 
     # Render the form with current data
-    return render_template('edit_food_item.html',
+    return render_template('food_items/edit_food_item.html',
                            food_items=food_items,
                            user_id=user_id,
                            role=role,

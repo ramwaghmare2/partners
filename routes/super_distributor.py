@@ -8,6 +8,7 @@ from base64 import b64encode
 from sqlalchemy import func
 from models import db
 import bcrypt
+import base64
 
 ###################################### Blueprint For Super Distributor ################################
 super_distributor_bp = Blueprint('super_distributor', __name__, template_folder='../templates/super_distributor', static_folder='../static')
@@ -281,9 +282,12 @@ def edit_super_distributor(sd_id):
     image_data= get_image(role, user_id) 
     user = get_user_query(role, user_id)
     sd = SuperDistributor.query.get_or_404(sd_id)
-
+    super_distributor_image = None
     notification_check = check_notification(role, user_id)
 
+    if sd.image:
+        super_distributor_image = base64.b64encode(sd.image).decode('utf-8')
+    
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
@@ -334,6 +338,7 @@ def edit_super_distributor(sd_id):
 
     return render_template('edit_super_distributor.html',
                            super_distributor=sd,
+                           super_distributor_image=super_distributor_image,
                            role=role,
                            user_name=sd.name,
                            encoded_image=image_data,

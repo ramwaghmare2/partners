@@ -12,7 +12,7 @@
         <div class="container d-flex justify-content-center">
             <div class="card shadow-lg p-4" style="width: 40rem; background: #fff; border-radius: 10px;">
                 <h2 class="text-center text-dark mb-4">🍽️ Add Cuisine</h2>
-
+                <hr>
                 {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
                     {% for category, message in messages %}
@@ -39,16 +39,25 @@
                         <textarea name="description" class="form-control" placeholder="Enter a short description of the cuisine (max 100 words)"></textarea>
                     </div>
 
-                    <!-- Image Upload -->
-                    <div class="mb-3">
-                        <label class="form-label">Upload Image</label>
-                        <input type="file" class="form-control" id="image" name="image">
+                    <!-- Profile Image Upload -->
+                    <div class="row mb-3">
+                        <!-- Profile Image Preview -->
+                        <div class="col-md-4">
+                            <label class="form-label">Profile Preview</label><br>
+                            <img id="imagePreview" src="#" class="img-thumbnail mt-2" style="max-width: 150px; border-radius: 10px; display: none;">
+                        </div>
+
+                        <!-- Upload Image -->
+                        <div class="col-md-8">
+                            <label class="form-label">Upload Profile Image</label>
+                            <input type="file" class="form-control" id="image" name="image" onchange="previewImage(event)">
+                        </div>
                     </div>
 
                     <!-- Submit Button -->
                     <div class="d-flex justify-content-center">
                         <button style="background: linear-gradient(135deg, #003366, #0055aa);" type="submit" class="btn btn-lg text-white">
-                            Submit
+                            Add Cuisine
                         </button>
                     </div>
                 </form>
@@ -59,3 +68,15 @@
     
     {% include 'sd_footer.html' %}
 </div>
+
+<script>
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.style.display = "block";
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>

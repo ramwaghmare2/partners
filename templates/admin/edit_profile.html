@@ -9,15 +9,17 @@
 {% elif role == 'Kitchen' %}
     {% include 'kitchen/kitchen_header.html' %}
 {% endif %}
+
 <body>
 <div id="layoutSidenav_content">
     <br>
     <main>
-        <!-- Add Doctor Form Content Here -->
-        <div class="sd-container">
-            <h2 class="sd-form">Edit {{role}}</h2>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
+        <div class="container d-flex justify-content-center">
+            <div class="card shadow-lg p-4" style="width: 50rem; background: #ffff; border-radius: 10px;">
+                <h2 class="text-center text-dark mb-4">✏️ Edit {{ role }}</h2>
+                <hr>
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
                     {% for category, message in messages %}
                         <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                             {{ message }}
@@ -27,35 +29,93 @@
                         </div>
                     {% endfor %}
                 {% endif %}
-            {% endwith %}
-            <form method="post" class="sd-form" enctype="multipart/form-data">
-                <div class="sd-row">
-                    <input name="name" type="text" value="{{ user.name }}" required>
-                </div>
-                <div class="sd-row">
-                    <input name="email" type="email" value="{{ user.email }}" required>
-                </div>
-                <div class="sd-row">
-                    <input name="contact" type="text" value="{{ user.contact }}" required>
-                </div>
-                <div class="sd-row password-wrapper">
-                    <input id="password" name="password" type="password" placeholder="Password">
-                    <span class="eye-icon" onclick="togglePassword()">
-                        <i id="eye-icon" class="fa fa-eye"></i>
-                    </span>
-                </div>
-                <div class="sd-row">
-                    <label for="image" class="form-label">Profile Image (Optional)</label>
-                    <input type="file" class="form-control-file" id="image" name="image">
-                </div>
-                
-                <br>
-                <div class="sd-buttons">
-                    <button style="background-color:#003366" type="submit" class="sd-submit">Save Changes</button>
-                </div>
-            </form>
+                {% endwith %}
+                <form method="post" enctype="multipart/form-data">
+                    <!-- Name and Email in one line -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Name</label>
+                            <input name="name" type="text" class="form-control" value="{{ user.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input name="email" type="email" class="form-control" value="{{ user.email }}" required>
+                        </div>
+                    </div>
+
+                    <!-- Mobile No and Password in one line -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Contact</label>
+                            <input name="contact" type="text" class="form-control" value="{{ user.contact }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <div class="mb-3 password-wrapper">
+                                <input id="password" name="password" type="password" class="form-control" placeholder="Password">
+                                <span class="eye-icon" onclick="togglePassword()">
+                                    <i id="eye-icon" class="fa fa-eye"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Current Image Preview -->
+                    <div class="row mb-3">
+                        <!-- Current Food Image -->
+                        <div class="col-md-4">
+                            <label class="form-label">Current Food Image</label><br>
+                            {% if encoded_image %}
+                                <img id="imagePreview" src="data:image/jpeg;base64,{{ encoded_image }}" 
+                                     class="img-thumbnail mt-2" style="max-width: 150px; border-radius: 10px; display: block;">
+                            {% else %}
+                                <p>No image available</p>
+                            {% endif %}
+                        </div>
+                    
+                        <!-- Upload New Image -->
+                        <div class="col-md-8">
+                            <label class="form-label">Upload New Image</label>
+                            <input type="file" class="form-control" id="image" name="image" onchange="previewImage(event)">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-center">
+                        <button style="background: linear-gradient(135deg, #003366, #0055aa);" type="submit" class="btn btn-lg text-white">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </main>
+    <br>
 </body>
 
 {% include 'sd_footer.html' %}
+
+<script>
+    function togglePassword() {
+        var passwordField = document.getElementById('password');
+        var eyeIcon = document.getElementById('eye-icon');
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = "password";
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+        }
+    }
+
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function() {
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.style.display = 'block'; // Show the image preview
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>

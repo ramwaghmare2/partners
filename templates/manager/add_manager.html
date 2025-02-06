@@ -3,51 +3,112 @@
 {% endif %}
 
 <div id="layoutSidenav_content">
-    <br>
     <main>
-        <!-- Add Doctor Form Content Here -->
-        <div class="sd-container">
-            <h2 class="sd-form">Add Manager</h2>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-            <form action="{{ url_for('manager.add_manager') }}" method="post" class="sd-form" enctype="multipart/form-data">
-                <div class="sd-row">
-                    <input name="name" type="text" placeholder="Full Name" required>
-                </div>
-                <div class="sd-row">
-                    <input name="email" type="email" placeholder="Email" required>
-                </div>
-                <div class="sd-row">
-                    <input name="contact" type="text" placeholder="Mobile" required>
-                </div>
-                <div class="sd-row password-wrapper">
-                    <input id="password" name="password" type="password" placeholder="Password" required>
-                    <span class="eye-icon" onclick="togglePassword()">
-                        <i id="eye-icon" class="fa fa-eye"></i>
-                    </span>
-                </div>
-                <div class="sd-row">
-                    <label for="image">Profile Image</label>
-                    <input type="file" class="form-control-file" id="image" name="image">
-                </div>
-                
-                <br>
-                <div class="sd-buttons">
-                    <button style="background-color: #003366;" type="submit" class="sd-submit">Submit</button>
-                </div>
-            </form>
-        </div>
-    </main>
-    <br>
+        <br><br>
+        <div class="container d-flex justify-content-center">
+            <div class="card shadow-lg p-4" style="width: 40rem; background: #fff; border-radius: 10px;">
+                <h2 class="text-center text-dark mb-4">👤 Add Manager</h2>
+                <hr>
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-{% include 'sd_footer.html' %}
+                <form action="{{ url_for('manager.add_manager') }}" method="POST" enctype="multipart/form-data">
+
+                    <!-- Full Name & Email in One Line -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input name="name" type="text" class="form-control" placeholder="Enter full name" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input name="email" type="email" class="form-control" placeholder="Enter email" required>
+                        </div>
+                    </div>
+
+                    <!-- Mobile & Password in One Line -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Mobile</label>
+                            <input name="contact" type="text" class="form-control" placeholder="Enter mobile number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Password</label>
+                            <div class="input-group">
+                                <input id="password" name="password" type="password" class="form-control" placeholder="Enter password" required>
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                    <i id="eye-icon" class="fa fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profile Image Upload -->
+                    <div class="row mb-3">
+                        <!-- Profile Image Preview -->
+                        <div class="col-md-4">
+                            <label class="form-label">Profile Preview</label><br>
+                            <img id="imagePreview" src="#" class="img-thumbnail mt-2" style="max-width: 150px; border-radius: 10px; display: none;">
+                        </div>
+
+                        <!-- Upload Image -->
+                        <div class="col-md-8">
+                            <label class="form-label">Upload Profile Image</label>
+                            <input type="file" class="form-control" id="image" name="image" onchange="previewImage(event)">
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex justify-content-center mt-4">
+                        <button style="background: linear-gradient(135deg, #003366, #0055aa);" 
+                                type="submit" class="btn btn-lg text-white me-3">
+                            Add Manager
+                        </button>
+                        <a href="{{ url_for('manager.get_managers') }}" class="btn btn-lg btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <br>
+        {% include 'sd_footer.html' %}
+    </main>
+</div>
+
+<script>
+    function togglePassword() {
+        var passwordInput = document.getElementById("password");
+        var eyeIcon = document.getElementById("eye-icon");
+        if (passwordInput.type === "password") {
+            passwordInput.type = "text";
+            eyeIcon.classList.remove("fa-eye");
+            eyeIcon.classList.add("fa-eye-slash");
+        } else {
+            passwordInput.type = "password";
+            eyeIcon.classList.remove("fa-eye-slash");
+            eyeIcon.classList.add("fa-eye");
+        }
+    }
+
+    function previewImage(event) {
+        var reader = new FileReader();
+        reader.onload = function(){
+            var output = document.getElementById('imagePreview');
+            output.src = reader.result;
+            output.style.display = "block";
+        };
+        reader.readAsDataURL(event.target.files[0]);
+    }
+</script>  

@@ -4,7 +4,7 @@ from models import db, Cuisine
 from utils.notification_service import check_notification, create_notification
 from utils.services import get_image, get_user_query, allowed_file
 from base64 import b64encode
-
+import base64
 ###################################### Blueprint For Cuisine ##########################################
 cuisine_bp = Blueprint('cuisine', __name__ , static_folder='../static')
 
@@ -88,49 +88,51 @@ def all_cuisines():
                            notification_check=len(notification_check))
 
 ###################################### Route for Edit Cuisine #######################################
-@cuisine_bp.route('/edit/<int:id>', methods=['POST','GET'])
+@cuisine_bp.route('/edit/<int:id>', methods=['GET', 'POST'])
 def edit_cuisine(id):
-    # Retrieve the food item by ID
+    # Retrieve cuisine by ID
     cuisines = Cuisine.query.get_or_404(id)
-    user_id= session.get('user_id')
+    user_id = session.get('user_id')
     role = session.get('role')
     user = get_user_query(role, user_id)
-    image_data = get_image(role, user_id)
+    image_data = get_image(role ,user_id)
 
     if request.method == 'POST':
         name = request.form.get('name')
-        descrption = request.form.get('description')
-        image = request.files.get('image')  # Get the image from the form
-        print(image)
-        image_binary = None
-        if image and allowed_file(image.filename):
-            image_binary = image.read()
+        description = request.form.get('description')
+        image = request.files.get('image')
 
-        # Update food item with the form data
+        # Convert image to binary if a new file is uploaded
+        if image and allowed_file(image.filename):
+            cuisines.image = image.read()
+
+        # Update other fields
         cuisines.name = name
-        cuisines.description = descrption
-        if image_binary:
-            cuisines.image = image_binary
-        
-        # Commit the changes to the database
+        cuisines.description = description
+
         db.session.commit()
 
-        create_notification(user_id=user.id, 
-                                role=role, 
-                                notification_type='Edit', 
-                                description=f'{user.name}, the {role}, has Successfully edited {cuisines.name}.')
+        create_notification(
+            user_id=user.id, 
+            role=role, 
+            notification_type='Edit', 
+            description=f'{user.name}, the {role}, has successfully edited {cuisines.name}.'
+        )
 
-        # Flash success message
         flash('Cuisine updated successfully!', 'success')
-        
         return redirect(url_for('cuisine.all_cuisines'))
 
-    # If it's a GET request, render the edit form with the current data
+    # Convert binary image data to Base64 string for display
+    cuisine_image = None
+    if cuisines.image:
+        cuisine_image = base64.b64encode(cuisines.image).decode('utf-8')
+
     return render_template('cuisines/edit_cuisines.html',
                            cuisine=cuisines,
                            user_id=user_id,
                            role=role,
                            encoded_image=image_data,
+                           cuisine_image=cuisine_image,
                            user_name=user.name)
 
 

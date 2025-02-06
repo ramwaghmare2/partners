@@ -9,6 +9,7 @@ from utils.services import allowed_file
 from sqlalchemy import func
 import bcrypt
 import json
+import base64
 
 ###################################### Blueprint For Kitchen ##########################################
 kitchen_bp = Blueprint('kitchen', __name__, static_folder='../static')
@@ -114,8 +115,10 @@ def edit_kitchen(kitchen_id):
     user_id = session.get('user_id')
     image_data= get_image(role, user_id) 
     user = get_user_query(role, user_id)
-
+    kitchen_image = None
     notification_check = check_notification(role, user_id)
+    if kitchen.image:
+        kitchen_image = base64.b64encode(kitchen.image).decode('utf-8')
 
     if request.method == 'POST':
         image = request.files.get('image')
@@ -168,6 +171,7 @@ def edit_kitchen(kitchen_id):
 
     return render_template('kitchen/edit_kitchen.html',
                            kitchen=kitchen,
+                           kitchen_image=kitchen_image,
                            role=role,
                            user_name=user.name,
                            encoded_image=image_data,

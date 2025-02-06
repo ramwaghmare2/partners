@@ -11,6 +11,7 @@ from sqlalchemy import func
 import bcrypt
 import json
 import logging
+import base64
 
 ###################################### Blueprint For Distributor ######################################
 distributor_bp = Blueprint('distributor', __name__, template_folder='../templates/distributor', static_folder='../static')
@@ -370,11 +371,6 @@ def lock_distributor(distributor_id):
 
     return redirect(url_for('distributor.all_distributor'))
 
-
-###################################### Function for image storage #####################################
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
-
 ###################################### Route for edit the distributor #################################
 @distributor_bp.route('/edit/<int:distributor_id>', methods=['GET', 'POST'])
 def edit_distributor(distributor_id):
@@ -384,7 +380,12 @@ def edit_distributor(distributor_id):
     user_id = session.get('user_id')
     image_data= get_image(role, user_id) 
     user = get_user_query(role, user_id)
+    distributor_image = None
     notification_check = check_notification(role, user_id)
+
+    if distributor.image:
+        distributor_image = base64.b64encode(distributor.image).decode('utf-8')
+
     if request.method == 'POST':
         name = request.form['name']
         email = request.form['email']
@@ -435,6 +436,7 @@ def edit_distributor(distributor_id):
             return render_template('edit_distributor.html', distributor=distributor, role=role , encoded_image = image_data, user_name=user.name)
 
     return render_template('edit_distributor.html',
+                           distributor_image=distributor_image,
                            distributor=distributor,
                            role=role,
                            encoded_image=image_data,
