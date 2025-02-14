@@ -248,6 +248,7 @@ def kitchen_home():
     user_name = session.get('user_name', 'User')
     role = session.get('role')
     user_id = session.get('user_id')
+    print("User ID ", user_id)
     image_data = get_image(role, user_id)
     notification_check = check_notification(role, user_id)
 

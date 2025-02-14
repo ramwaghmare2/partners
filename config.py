@@ -1,15 +1,17 @@
 ###################################### Importing Required Libraries ###################################
 from sqlalchemy import create_engine, MetaData, Table
+from datetime import timedelta
 import os
 
 ###################################### Configuration Class ############################################
 class Config:
 
     SECRET_KEY = os.environ.get('SECRET_KEY', 'your_secret_key')
+    PERMANENT_SESSION_LIFETIME = timedelta(hours=5)  # Correct way to set session lifetime
+
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA')  # Database connection string for SQLAlchemy
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
 """engine = create_engine(SQLALCHEMY_DATABASE_URI)
     metadata = MetaData()
     metadata.reflect(bind=engine)
