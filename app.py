@@ -5,7 +5,7 @@ from flask_socketio import SocketIO
 from utils.services import today_sale
 from flask_migrate import Migrate
 from flask_bcrypt import Bcrypt
-from datetime import datetime
+from datetime import datetime, timedelta
 from models import db
 import threading
 import schedule

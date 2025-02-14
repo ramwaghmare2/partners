@@ -8,3 +8,6 @@ __pycache__/
 
 # Migrations
 /migrations/
+
+# docs
+/.docs/
