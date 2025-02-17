@@ -8,6 +8,8 @@ class Order(db.Model):
     order_id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('customer.customer_id'), nullable=False)
     kitchen_id = db.Column(db.Integer, db.ForeignKey('kitchens.id'), nullable=False)
+    address = db.Column(db.String(255), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
     order_status = db.Column(db.Enum('Pending', 'Processing', 'Completed', 'Cancelled'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
