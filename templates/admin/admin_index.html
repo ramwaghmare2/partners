@@ -5,6 +5,11 @@
 
 <!-- Load jQuery First -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.24/jspdf.plugin.autotable.min.js"></script>
+
 
 <!-- Load DataTables -->
 <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
@@ -24,7 +29,19 @@
 
 <!-- Load Custom JavaScript LAST -->
 <script src="{{ url_for('static', filename='js/table_data_export.js') }}"></script>
+<style>
+  /* Style to ensure the dropdown stays at the right of the container */
+  .card-header1 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+  }
 
+  .dropdown {
+      margin-left: auto; /* This moves the dropdown to the right */
+      margin-right: 5px;
+  }
+</style>
 
 <div id="layoutSidenav_content">
     <main>
@@ -187,14 +204,22 @@
     <!-- Sales Data Table -->
 
     <div class="card1 shadow mt-5">
-        <div class="card-header1 py-3">
-            <h6 class="font-weight-bold">Sales Data Table</h6>
-            <button id="exportCSV" class="btn btn-primary">Export CSV</button>
-            <button id="exportExcel" class="btn btn-success">Export Excel</button>
-            <button id="exportPDF" class="btn btn-danger">Export PDF</button>
-            <button id="exportImage" class="btn btn-info">Export Image</button>
+      <div class="card-header1 py-3">
+        <h6 class="font-weight-bold">Sales Data Table</h6>
+        <!-- Dropdown for export options on the right -->
+        <div class="dropdown">
+            Export: 
+            <button class="btn btn-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                Select Format
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                <li><a class="dropdown-item" id="exportCSV">CSV</a></li>
+                <li><a class="dropdown-item" id="exportExcel">Excel</a></li>
+                <li><a class="dropdown-item" id="exportPDF">PDF</a></li>
+            </ul>
         </div>
-        <table class="table table-striped table-bordered table-hover" id="OrderTable">
+      </div>
+        <table class="table table-striped table-bordered table-hover">
             <thead class="thead1 text-center">
                 <tr>
                     <th>Sale ID</th>

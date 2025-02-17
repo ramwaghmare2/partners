@@ -1,64 +1,84 @@
-$(document).ready(function () {
-    console.log("Checking if jQuery and DataTables are available...");
-    
-    if (typeof jQuery === "undefined") {
-        console.error("Error: jQuery is not loaded! Check script order.");
-        return;
-    }
 
-    if (typeof $.fn.DataTable === "undefined") {
-        console.error("Error: DataTables is not loaded! Check script order.");
-        return;
-    }
+        document.addEventListener("DOMContentLoaded", function () {
+            // Export CSV button
+            document.querySelector('#exportCSV').addEventListener('click', function () {
+                exportTableToCSV();
+            });
+            
+            // Export Excel button
+            document.querySelector('#exportExcel').addEventListener('click', function () {
+                exportTableToExcel();
+            });
 
-    console.log("Initializing DataTable...");
+            // Export PDF button
+            document.querySelector('#exportPDF').addEventListener('click', function () {
+                exportTableToPDF();
+            });
 
-    let table = $('#OrderTable').DataTable({
-        dom: 'Bfrtip',
-        buttons: [
-            {
-                extend: 'csv',
-                text: 'Download CSV',
-                className: 'btn btn-primary',
-                filename: 'Sales_Data'
-            },
-            {
-                extend: 'excel',
-                text: 'Download Excel',
-                className: 'btn btn-success',
-                filename: 'Sales_Data'
-            },
-            {
-                extend: 'pdf',
-                text: 'Download PDF',
-                className: 'btn btn-danger',
-                filename: 'Sales_Data',
-                orientation: 'landscape',
-                pageSize: 'A4',
-                exportOptions: { columns: ':visible' }
-            }
-        ]
-    });
-
-    $("#exportCSV").click(function () {
-        table.button('.buttons-csv').trigger();
-    });
-
-    $("#exportExcel").click(function () {
-        table.button('.buttons-excel').trigger();
-    });
-
-    $("#exportPDF").click(function () {
-        table.button('.buttons-pdf').trigger();
-    });
-
-    // Image Export (Convert table to PNG)
-    $("#exportImage").click(function () {
-        html2canvas(document.querySelector("#OrderTable")).then(canvas => {
-            let link = document.createElement("a");
-            link.href = canvas.toDataURL("image/png");
-            link.download = "Sales_Data.png";
-            link.click();
+            // Export button for dropdown
+            document.querySelector('#export').addEventListener('click', function () {
+                // Assuming you will trigger an export action here
+                alert('Exporting...');
+            });
         });
-    });
-});
+
+        // CSV Export
+        function exportTableToCSV() {
+            const table = document.querySelector('table');
+            const rows = Array.from(table.rows);
+            const csvArray = rows.map(row => {
+                const cells = Array.from(row.cells).map(cell => cell.innerText);
+                return cells.join(",");
+            });
+            const csvData = csvArray.join("\n");
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            if (link.download !== undefined) {
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'sales_data.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+        }
+
+        // Excel Export
+        function exportTableToExcel() {
+            const table = document.querySelector('table');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Sales Data" });
+            XLSX.writeFile(wb, 'sales_data.xlsx');
+        }
+
+        // PDF Export
+        function exportTableToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+        
+            // Get the table data
+            const table = document.querySelector('table');
+            const rows = Array.from(table.rows);
+            
+            // Prepare table headers and rows for jsPDF autoTable
+            const headers = Array.from(rows[0].cells).map(cell => cell.innerText);
+            const data = rows.slice(1).map(row => {
+                return Array.from(row.cells).map(cell => cell.innerText);
+            });
+        
+            // Use jsPDF autoTable to add the table to the PDF
+            doc.autoTable({
+                head: [headers], // Set the table header
+                body: data, // Set the table rows
+                startY: 20, // Start the table a little lower on the page
+                theme: 'striped', // Apply striped theme for better visibility
+                headStyles: {
+                    fillColor: [0, 123, 255], // Set header background color (blue)
+                    textColor: [255, 255, 255] // Set header text color (white)
+                },
+                margin: { top: 10, left: 10, right: 10, bottom: 10 } // Add margins
+            });
+        
+            // Save the generated PDF
+            doc.save("sales_data.pdf");
+        }
