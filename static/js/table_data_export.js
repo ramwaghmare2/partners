@@ -24,7 +24,7 @@
 
         // CSV Export
         function exportTableToCSV() {
-            const table = document.querySelector('table');
+            const table = document.querySelector('.export');
             const rows = Array.from(table.rows);
             const csvArray = rows.map(row => {
                 const cells = Array.from(row.cells).map(cell => cell.innerText);
@@ -46,7 +46,7 @@
 
         // Excel Export
         function exportTableToExcel() {
-            const table = document.querySelector('table');
+            const table = document.querySelector('.export');
             const wb = XLSX.utils.table_to_book(table, { sheet: "Sales Data" });
             XLSX.writeFile(wb, 'sales_data.xlsx');
         }
@@ -57,7 +57,7 @@
             const doc = new jsPDF();
         
             // Get the table data
-            const table = document.querySelector('table');
+            const table = document.querySelector('.export');
             const rows = Array.from(table.rows);
             
             // Prepare table headers and rows for jsPDF autoTable

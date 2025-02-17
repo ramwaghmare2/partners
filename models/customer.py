@@ -2,13 +2,14 @@
 from . import db
 from datetime import datetime, timedelta
 from random import randint
-
+from sqlalchemy.dialects.mysql import LONGBLOB
 ###################################### User Model #####################################################
 class Customer(db.Model):
     __tablename__ = 'customer'
     customer_id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
+    image = db.Column(LONGBLOB, nullable=True)
     gender = db.Column(db.String(10), nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(512), nullable=False)
