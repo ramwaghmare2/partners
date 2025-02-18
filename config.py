@@ -12,6 +12,10 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA')  # Database connection string for SQLAlchemy
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # Configure POS Printer (Replace with your printer's Vendor ID and Product ID)
+    VENDOR_ID = 0x04B8  
+    PRODUCT_ID = 0x0202  
 """engine = create_engine(SQLALCHEMY_DATABASE_URI)
     metadata = MetaData()
     metadata.reflect(bind=engine)

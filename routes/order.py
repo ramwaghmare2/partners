@@ -2,6 +2,7 @@
 from models import Order, FoodItem, OrderItem, Sales, SuperDistributor, Distributor, Kitchen, Manager
 from flask import Blueprint, request, jsonify, session, redirect, render_template, url_for, flash
 from utils.notification_service import check_notification
+from pos_bill import generate_and_print_pdf
 from werkzeug.exceptions import NotFound
 from datetime import datetime, timedelta
 from utils.services import get_image
@@ -349,7 +350,7 @@ def order_cart():
     except KeyError as ke:
         db.session.rollback()
         flash(f'Error:  Missing key: {str(ke)}')
-        return redirect(url_for('order.get_cart'))
+        return redirect(url_for('order.get_cart'))    
 
     except Exception as e:
         db.session.rollback()
@@ -499,8 +500,10 @@ def update_status(order_id):
     try:
         user_id = session.get('user_id')
         order = Order.query.filter_by(order_id=order_id).first()
+
         order.order_status = 'Completed'
         db.session.commit()
+        
         sales = Sales(
             order_id=order.order_id,
             cuisine_id=order.order_items[0].food_item.cuisine_id,
@@ -509,6 +512,18 @@ def update_status(order_id):
         )
         db.session.add(sales)
         db.session.commit()
+
+        order_details = {
+            "order_id": order.order_id,
+            "customer_name": f"{order.customer.first_name} {order.customer.last_name}",
+            "address": order.address,
+            "total_amount": order.total_amount,
+            "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "items": [{"name": item.food_item.name, "quantity": item.quantity, "price": item.food_item.price}
+                      for item in order.order_items]
+        }
+
+        bill_info = generate_and_print_bill(order_details)
 
         flash('Order Status updated Successfully!', 'success')
         return redirect(url_for('order.kitchen_orders', kitchen_id=user_id))
