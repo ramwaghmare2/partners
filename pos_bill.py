@@ -1,4 +1,5 @@
 import os
+from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from escpos.printer import Usb
 from config import Config  
@@ -20,23 +21,41 @@ def generate_bill_pdf(order_details):
     filename = f"bill_{order_details['order_id']}.pdf"
     file_path = os.path.join(BILL_SAVE_PATH, filename)
 
-    c = canvas.Canvas(file_path)
+    c = canvas.Canvas(file_path, pagesize=letter)
     c.setFont("Helvetica", 12)
 
-    c.drawString(100, 800, "Food Delivery Service")
-    c.drawString(100, 780, f"Order ID: {order_details['order_id']}")
-    c.drawString(100, 760, f"Customer: {order_details['customer_name']}")
-    c.drawString(100, 740, f"Address: {order_details['address']}")
-    c.drawString(100, 720, f"Date & Time: {order_details['created_at']}")
+    y_position = 750
+    
+    def draw_line():
+        c.line(50, y_position, 500, y_position)
+        
+    c.drawString(100, y_position, "Food Delivery Service")
+    y_position -= 20
+    draw_line()
 
-    y_position = 700
-    c.drawString(100, y_position, "Items Ordered:")
-    for item in order_details["items"]:
-        y_position -= 20
-        c.drawString(120, y_position, f"{item['name']} x {item['quantity']} - ₹{item['price']}")
-
+    c.drawString(100, y_position - 20, f"Order ID: {order_details['order_id']}")
+    c.drawString(100, y_position - 40, f"Customer: {order_details['customer_name']}")
+    c.drawString(100, y_position - 60, f"Address: {order_details['address']}")
+    c.drawString(100, y_position - 80, f"Date & Time: {order_details['created_at']}")
+    
+    y_position -= 100
+    draw_line()
+    
+    c.drawString(100, y_position - 20, "Items Ordered:")
     y_position -= 40
-    c.drawString(100, y_position, f"Total Amount: ₹{order_details['total_amount']}")
+    
+    for item in order_details["items"]:
+        c.drawString(120, y_position, f"{item['name']} x {item['quantity']} - ₹{item['price']}")
+        y_position -= 40
+
+    y_position -= 20
+    draw_line()
+    
+    c.drawString(100, y_position - 20, f"Total Amount: ₹{order_details['total_amount']}")
+    y_position -= 40
+    draw_line()
+    
+    c.drawString(100, y_position - 20, "Thank You!")
 
     c.save()
     return file_path
