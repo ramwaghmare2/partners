@@ -515,6 +515,7 @@ def update_status(order_id):
 
         order_details = {
             "order_id": order.order_id,
+            "kitchen_name" :order.kitchen.name,
             "customer_name": f"{order.customer.first_name} {order.customer.last_name}",
             "address": order.address,
             "total_amount": order.total_amount,
