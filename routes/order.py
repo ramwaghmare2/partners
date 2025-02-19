@@ -2,7 +2,7 @@
 from models import Order, FoodItem, OrderItem, Sales, SuperDistributor, Distributor, Kitchen, Manager
 from flask import Blueprint, request, jsonify, session, redirect, render_template, url_for, flash
 from utils.notification_service import check_notification
-from pos_bill import generate_and_print_pdf
+from pos_bill import generate_and_print_bill
 from werkzeug.exceptions import NotFound
 from datetime import datetime, timedelta
 from utils.services import get_image
@@ -519,7 +519,7 @@ def update_status(order_id):
             "address": order.address,
             "total_amount": order.total_amount,
             "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "items": [{"name": item.food_item.name, "quantity": item.quantity, "price": item.food_item.price}
+            "items": [{"name": item.food_item.item_name, "quantity": item.quantity, "price": item.food_item.price}
                       for item in order.order_items]
         }
 
