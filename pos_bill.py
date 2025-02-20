@@ -11,7 +11,7 @@ VENDOR_ID = Config.VENDOR_ID
 PRODUCT_ID = Config.PRODUCT_ID
 
 # Directory for Saving Bills
-BILL_SAVE_PATH = r"C:\Users\Admin\Desktop\OpenFuture\order_bills"
+BILL_SAVE_PATH = r"C:\Users\tiwar\Desktop\OpenFuture\order_bills"
 os.makedirs(BILL_SAVE_PATH, exist_ok=True)
 
 # Initialize Printer
@@ -95,7 +95,7 @@ def generate_bill_pdf(order_details):
     c.setFont("Helvetica-Bold", 8)
     c.drawString(10, y, f"Discount ({discount_percentage}%):")
     c.drawRightString(200, y, f"- {discount_amount:.2f}")
-
+    c.drawCentredString(width / 2, y, f"Payment Method: {order_details['payment_mode']}")
     y -= 12
     c.setFont("Helvetica-Bold", 8)
     c.drawString(10, y, "Payable:")

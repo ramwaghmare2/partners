@@ -1,0 +1,401 @@
+{% include 'kitchen/kitchen_header.html' %}
+
+<style>
+    .pos-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 100%; /* Ensure it doesn't exceed the container width */
+}
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .product-entry {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        width: 80%;
+    }
+
+    .product-entry input {
+        width: 30%;
+        padding: 8px;
+        margin: 5px;
+    }
+
+    button {
+        padding: 8px 15px;
+        background-color: #cf0202;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #6d0511;
+    }
+
+    table {
+    width: 100%; /* Make sure the table fills the container width */
+    margin-top: 20px;
+    border-collapse: collapse;
+    table-layout: fixed; /* Ensure the table cells have a fixed width */
+    word-wrap: break-word; /* Break long words inside table cells */
+}
+
+table th, table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+    .total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .total h2 {
+        margin: 0;
+    }
+
+    .order-button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .order-button:hover {
+        background-color: #45a049;
+    }
+
+    .menu {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-items: center;
+    padding: 10px; /* Added padding for better spacing */
+    box-sizing: border-box; /* Ensures padding doesn't affect the layout */
+}
+
+.menu-item {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    max-width: 180px; /* Adjusted max-width for smaller item size */
+    transition: transform 0.2s;
+    box-sizing: border-box; /* Ensures padding does not overflow */
+}
+
+.menu-item img {
+    width: 100px;
+    height: 100px; /* Keeps image size proportional */
+    max-width: 150px; /* Limits the image size to fit better */
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.menu-item h3 {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.menu-item p {
+    font-size: 14px;
+}
+
+/* Ensure the items stay inside the container and prevent overflow */
+#layoutSidenav_content {
+    overflow: hidden;
+}
+
+
+    .add-to-cart {
+        padding: 8px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+        width: auto;
+    }
+
+    .add-to-cart:hover {
+        background-color: #45a049;
+    }
+
+    .payment-option {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    text-align: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.payment-option:hover {
+    background-color: #f1f1f1;
+}
+
+.payment-option.selected {
+    background-color: #4CAF50;  /* Highlight color for selected option */
+    color: white;               /* Change text color to white */
+    font-weight: bold;          /* Optionally make the text bold */
+    border: 2px solid #45a049; /* Add border to selected option for clearer distinction */
+}
+
+    #product-list-container {
+    overflow-x: auto; /* Enables horizontal scrolling */
+    max-width: 100%; /* Ensures the container fits within its parent */
+}
+
+#search-bar {
+    width: 100%;
+    padding: 8px 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+
+</style>
+
+<div id="layoutSidenav_content">
+    <main>
+        <br>
+        <div class="container-fluid px-4">
+            <div class="row mb-4">
+                <div class="col-md-5">
+                    <div class="pos-container">
+                        <h1>Added Products</h1>
+                        <div id="product-list-container">
+                            <table id="product-list">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Products will be listed here -->
+                                </tbody>
+                            </table>
+                        </div> 
+                        <h3>Payment Options</h3>
+                        <div class="row">
+                            <div class="col-sm-4 payment-option" onclick="selectPayment('Cash')">
+                                Cash
+                            </div>
+                            <div class="col-sm-4 payment-option" onclick="selectPayment('Credit Card')">
+                                Credit Card
+                            </div>
+                            <div class="col-sm-4 payment-option" onclick="selectPayment('PayPal')">
+                                PayPal
+                            </div>
+                        </div>                                                                     
+                    </div>
+                    <div class="total">
+                        <h2>Total: ₹<span id="total-price">0.00</span></h2>
+                        <button class="order-button" onclick="processOrder()">Order</button>
+                        <input type="hidden" id="kitchen-id" value="{{ user_id }}">
+                    </div>
+                </div>
+                <div class="col-md-7">
+                    <div class="pos-container">
+                        <h1>Menu</h1>
+                        <input type="text" id="search-bar" placeholder="Search for items..." onkeyup="searchItems()">
+                        <div class="menu" id="menu-list">
+                            {% for item in menu_items %}
+                            <div class="menu-item" data-id="{{ item.id }}" data-name="{{ item.item_name }}" data-price="{{ item.price }}">
+                                <img src="{{ item.image_base64 }}" alt="{{ item.item_name }}">
+                                <h3>{{ item.item_name }}</h3>
+                                <p>₹{{ item.price }}</p>
+                                <button class="add-to-cart">Add</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+    </main>
+    {% include 'sd_footer.html' %}
+</div>
+
+<script>
+    const productList = document.getElementById('product-list').getElementsByTagName('tbody')[0];
+    const totalPriceDisplay = document.getElementById('total-price');
+
+    let total = 0;
+
+    const addToCartButtons = document.querySelectorAll('.add-to-cart');
+    addToCartButtons.forEach(button => {
+        button.addEventListener('click', addProductToCart);
+    });
+
+    function addProductToCart(event) {
+        const menuItem = event.target.closest('.menu-item');
+        const name = menuItem.dataset.name;
+        const price = parseFloat(menuItem.dataset.price);
+        const item_id = parseInt(menuItem.dataset.id);
+
+        if (isNaN(item_id)) {
+            alert("Invalid item ID");
+            return;
+        }
+
+        const existingProductRow = [...productList.rows].find(row => row.cells[0].textContent === name);
+
+        if (existingProductRow) {
+            const quantityCell = existingProductRow.cells[2];
+            const quantity = parseInt(quantityCell.textContent) + 1;
+            const totalCell = existingProductRow.cells[3];
+            const newTotal = quantity * price;
+
+            quantityCell.textContent = quantity;
+            totalCell.textContent = `₹${newTotal.toFixed(2)}`;
+
+            total += price;
+            totalPriceDisplay.textContent = total.toFixed(2);
+        } else {
+            const row = productList.insertRow();
+            const productTotal = price;
+
+            row.setAttribute('data-id', item_id);
+
+            row.innerHTML = `
+                <td>${name}</td>
+                <td>₹${price.toFixed(2)}</td>
+                <td>1</td>
+                <td>₹${productTotal.toFixed(2)}</td>
+                <td><button onclick="removeProduct(this, ${item_id})">X</button></td>
+            `;
+
+            total += productTotal;
+            totalPriceDisplay.textContent = total.toFixed(2);
+        }
+    }
+
+    function removeProduct(button, item_id) {
+        const row = button.closest('tr');
+        const price = parseFloat(row.cells[1].textContent.replace('₹', ''));
+        const quantity = parseInt(row.cells[2].textContent);
+        const totalForItem = price * quantity;
+
+        total -= totalForItem;
+        totalPriceDisplay.textContent = total.toFixed(2);
+
+        row.remove();
+    }
+
+    let paymentMethod = '';  // Variable to store selected payment method
+
+    function selectPayment(method) {
+    paymentMethod = method;
+    console.log("Selected Payment Method: ", paymentMethod);
+
+    // Remove 'selected' class from all payment options
+    const paymentOptions = document.querySelectorAll('.payment-option');
+    paymentOptions.forEach(option => {
+        option.classList.remove('selected');
+    });
+
+    // Add 'selected' class to the clicked payment option
+    const selectedOption = [...paymentOptions].find(option => option.textContent.trim() === method);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+    }
+}
+
+
+    function processOrder() {
+        console.log("Order button clicked");
+
+        const kitchenIdElement = document.getElementById('kitchen-id');
+        if (!kitchenIdElement) {
+            alert("Kitchen ID is missing.");
+            return;
+        }
+
+        const kitchen_id = kitchenIdElement.value;
+
+        const orderDetails = [];
+        if (productList.rows.length === 0) {
+            alert('Please add items to the cart before placing an order.');
+            return;
+        }
+
+        [...productList.rows].forEach(row => {
+            const item_id = row.dataset.id;
+            const name = row.cells[0].textContent;
+            const quantity = parseInt(row.cells[2].textContent);
+            const price = parseFloat(row.cells[1].textContent.replace('₹', ''));
+            const total = parseFloat(row.cells[3].textContent.replace('₹', ''));
+
+            if (isNaN(item_id)) {
+                alert("Invalid item ID in the cart");
+                return;
+            }
+
+            orderDetails.push({
+                item_id: item_id,
+                quantity: quantity,
+                price: price
+            });
+        });
+
+        if (orderDetails.length === 0) {
+            alert('Please add items to the cart before placing an order.');
+            return;
+        }
+
+        if (!paymentMethod) {
+            alert('Please select a payment method.');
+            return;
+        }
+
+        const orderData = {
+            kitchen_id: kitchen_id,
+            payment_method: paymentMethod,  // Include the selected payment method
+            cart_items: orderDetails
+        };
+
+        fetch('/kitchen/POS-order', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(orderData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.order_id) {
+                window.location.href = `/kitchen/POS`;
+            }
+        })
+        .catch(error => {
+            alert('An error occurred. Please try again later.');
+        });
+    }
+
+</script>
