@@ -404,7 +404,6 @@ def pos_order():
                 price=item_total_price,  # Save the total price
             )
             db.session.add(order_item)
-
             # Append the order item details to the list
             order_items_details.append({
                 'item_id': item['item_id'],
@@ -424,24 +423,38 @@ def pos_order():
 
         # Commit all changes and update the total amount of the order
         db.session.commit()
+        order_items_details = [
+            {
+                'name': item.food_item.item_name,  # Include item name here
+                #'item_id': str(item.id),
+                'quantity': item.quantity,
+                'price': item.food_item.price,  # Rename `item_price` to `price`
+                'total_price': item.quantity * item.food_item.price
+            }
+            for item in OrderItem.query.filter_by(order_id=new_order.order_id).all()
+        ]
+        print("Order Item details",order_items_details)
+        # Prepare order details
+        order_details = {
+            'order_id': new_order.order_id,
+            'kitchen_name': new_order.kitchen.name,
+            'total_amount': total_amount,
+            #'order_items': order_items_details,  # Rename this to `items`
+            'items': order_items_details,  # Ensures compatibility
+            'payment_method': payment.payment_method if payment.payment_method else 'Not provided',
+            'created_at': new_order.created_at.strftime('%Y-%m-%d %H:%M:%S'),  # Convert datetime
+            'customer_name': "customer_name",  # Add this
+            'address': "customer_address"  # Add this
+        }
+        # Debugging print to check if data is correct before calling bill generation
+        print("Order details before bill generation:", order_details)
 
+        # Call the function to generate and print the bill
+        generate_and_print_bill(order_details)
         
 
         # Clear the cart from the session after placing the order
         session.pop(f'cart_{user_id}', None)
-
-        order_details = {
-            "order_id": new_order.order_id,
-            "kitchen_name" :new_order.kitchen.name,
-            "total_amount": new_order.total_amount,
-            "created_at": new_order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            "payment_mode": payment.payment_method,
-            "items": [{"name": item.food_item.item_name, "quantity": item.quantity, "price": item.food_item.price}
-                      for item in new_order.order_item]
-        }
-        print(order_details)
-
-        bill_info = generate_and_print_bill(order_details)
 
         # Return a JSON response with the order details
         return jsonify({
@@ -449,7 +462,7 @@ def pos_order():
             'order_id': new_order.order_id,
             'total_amount': total_amount,
             'order_items': order_items_details,
-            'payment_method': payment_method  # Optionally return payment method
+            'payment_method': payment_method if payment_method else 'Not provided'  # Optionally return payment method
         }), 201
 
     except ValueError as ve:
