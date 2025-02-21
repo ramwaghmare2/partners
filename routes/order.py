@@ -457,7 +457,7 @@ def kitchen_orders( ):
                 'kitchen_name': order.kitchen.name,
                 'total_amount': order.total_amount,
                 'status': order.order_status,
-                'customer_name': f"{order.customer.first_name} {order.customer.last_name}",
+                'customer_name': f"{order.customer.first_name if order.customer else 'N/A'} {order.customer.last_name if order.customer else ''}".strip(),
                 'created_at': order.created_at,
                 'updated_at': order.updated_at,
                 'items': [
@@ -516,7 +516,7 @@ def update_status(order_id):
         order_details = {
             "order_id": order.order_id,
             "kitchen_name" :order.kitchen.name,
-            "customer_name": f"{order.customer.first_name} {order.customer.last_name}",
+            'customer_name': f"{order.customer.first_name if order.customer else 'N/A'} {order.customer.last_name if order.customer else ''}".strip(),
             "address": order.address,
             "total_amount": order.total_amount,
             "created_at": order.created_at.strftime("%Y-%m-%d %H:%M:%S"),
