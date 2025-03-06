@@ -27,7 +27,10 @@ def create_app():
     app = Flask(__name__, static_url_path='/static', static_folder='static')
     app.config.from_object('config.Config')
     app.secret_key = os.environ.get("SECRET_KEY", "default_secret_key")
-
+    
+    UPLOAD_FOLDER = "uploads"
+    app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf", "mp4"}
     # Initialize extensions
     socketio.init_app(app)
     app.socketio = socketio
@@ -111,4 +114,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
