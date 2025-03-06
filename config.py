@@ -1,6 +1,7 @@
 ###################################### Importing Required Libraries ###################################
 from sqlalchemy import create_engine, MetaData, Table
 from datetime import timedelta
+from pymongo import MongoClient
 import os
 
 ###################################### Configuration Class ############################################
@@ -16,11 +17,4 @@ class Config:
     # Configure POS Printer (Replace with your printer's Vendor ID and Product ID)
     VENDOR_ID = 0x04B8  
     PRODUCT_ID = 0x0202  
-"""engine = create_engine(SQLALCHEMY_DATABASE_URI)
-    metadata = MetaData()
-    metadata.reflect(bind=engine)
     
-    CELERY_BROKER_URL = 'mysql+pymysql://root:root@localhost/hierarchical_db'  # Celery broker URL (could still be Redis/RabbitMQ, but MySQL for result backend)
-    CELERY_RESULT_BACKEND = 'db+mysql://root:root@localhost/hierarchical_db'  # Use MySQL for the result backend (same as the main database)
-    CELERY_ACCEPT_CONTENT = ['json']  # Celery will accept JSON formatted tasks
-    CELERY_TASK_SERIALIZER = 'json'  # Serialize tasks in JSON format"""

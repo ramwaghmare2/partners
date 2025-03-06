@@ -15,6 +15,7 @@ from .royalty import royalty_bp
 from .notification_routes import notification_bp
 from .sales_report import sales_bp
 from .orders_report import orders_bp
+from .chat_routes import chat_bp
 
 ###################################### Function to Register Blueprints ################################
 def create_app_routes(app):
@@ -34,3 +35,5 @@ def create_app_routes(app):
     app.register_blueprint(wallet_bp, url_prefix='/wallet')
     app.register_blueprint(royalty_bp, url_prefix='/royalty')
     app.register_blueprint(notification_bp, url_prefix='/notification')
+    app.register_blueprint(chat_bp, url_prefix='/chat')
+
