@@ -1,0 +1,216 @@
+{% include 'admin/admin_header.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.chat-container {
+    width: 400px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 500px;
+}
+
+.chat-header {
+    background: #0066cc;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.5em;
+}
+
+.chat-body {
+    padding: 10px 20px;
+    overflow-y: auto;
+    flex: 1;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.message {
+    display: flex;
+    flex-direction: column;
+    margin: 10px 0;
+}
+
+.message.sent {
+    align-items: flex-end;
+}
+
+.message.received {
+    align-items: flex-start;
+}
+
+.message .bubble {
+    max-width: 70%;
+    padding: 10px;
+    border-radius: 20px;
+    font-size: 1em;
+    line-height: 1.5;
+    background: #f1f1f1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.message.sent .bubble {
+    background: #0066cc;
+    color: white;
+}
+
+.chat-input-container {
+    display: flex;
+    padding: 15px;
+    background: #fff;
+    border-top: 1px solid #ddd;
+}
+
+.chat-input-container input {
+    flex: 1;
+    padding: 10px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+    font-size: 1em;
+}
+
+.chat-input-container button {
+    background: #0066cc;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.chat-input-container button:hover {
+    background: #004da8;
+}
+
+.loader {
+    text-align: center;
+    padding: 20px;
+    color: #0066cc;
+    display: none;
+}
+
+@keyframes fadeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+    </style>
+</head>
+<div id="layoutSidenav_content">
+    <main>
+        <div class="container-fluid px-4">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <div class="chat-container">
+                <div class="chat-header">
+                    <h1>Chat with Your Friend</h1>
+                </div>
+                <div class="chat-body" id="chat-body">
+                    <!-- Messages will appear here -->
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="message-input" placeholder="Type a message..." />
+                    <button onclick="sendMessage()" id="send-btn">Send</button>
+                </div>
+                <div class="loader" id="loader">Loading...</div>
+            </div>        
+        </div>
+    </main>
+    {% include 'admin/admin_footer.html' %}
+</div>
+
+<script>
+    const chatBody = document.getElementById('chat-body');
+const messageInput = document.getElementById('message-input');
+const sendBtn = document.getElementById('send-btn');
+const loader = document.getElementById('loader');
+
+let sender_id = 'user1'; // Example sender ID
+let receiver_id = 'user2'; // Example receiver ID
+let currentPage = 1;
+let limit = 20;
+
+async function fetchMessages() {
+    loader.style.display = 'block';
+    const response = await fetch(`/get_messages?sender_id=${sender_id}&receiver_id=${receiver_id}&page=${currentPage}`);
+    const messages = await response.json();
+    loader.style.display = 'none';
+    
+    messages.forEach(msg => {
+        displayMessage(msg);
+    });
+}
+
+function displayMessage(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message');
+    messageDiv.classList.add(msg.sender_id === sender_id ? 'sent' : 'received');
+    
+    const bubble = document.createElement('div');
+    bubble.classList.add('bubble');
+    bubble.innerText = msg.message_text;
+
+    messageDiv.appendChild(bubble);
+    chatBody.appendChild(messageDiv);
+}
+
+function sendMessage() {
+    const messageText = messageInput.value.trim();
+    if (messageText === '') return;
+
+    const message = {
+        sender_id: sender_id,
+        receiver_id: receiver_id,
+        message_text: messageText,
+        timestamp: new Date().toISOString()
+    };
+
+    // Display the sent message immediately (no server interaction here)
+    displayMessage(message);
+
+    // Reset input
+    messageInput.value = '';
+    
+    // Optionally send the message to the server to save in DB
+    // Example POST request:
+    // fetch('/send_message', { method: 'POST', body: JSON.stringify(message), headers: { 'Content-Type': 'application/json' } });
+}
+
+// Initial fetch when page loads
+fetchMessages();
+
+</script>

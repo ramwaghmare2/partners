@@ -11,7 +11,7 @@ VENDOR_ID = Config.VENDOR_ID
 PRODUCT_ID = Config.PRODUCT_ID
 
 # Directory for Saving Bills
-BILL_SAVE_PATH = r"C:\Users\Ram\Desktop\Restaurant_Bills"
+BILL_SAVE_PATH = r"C:\Users\tiwar\Desktop\Restaurant_Bills"
 os.makedirs(BILL_SAVE_PATH, exist_ok=True)
 
 # Initialize Printer
