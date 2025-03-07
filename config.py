@@ -3,6 +3,12 @@ from sqlalchemy import create_engine, MetaData, Table
 from datetime import timedelta
 from pymongo import MongoClient
 import os
+import pymysql
+
+engine = create_engine(os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA'))
+
+def get_db_connection():
+    return engine.raw_connection()
 
 ###################################### Configuration Class ############################################
 class Config:
