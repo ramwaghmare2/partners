@@ -1,6 +1,5 @@
-from flask import Flask, request, jsonify, current_app
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from flask_sqlalchemy import SQLAlchemy
+from flask import current_app
+from flask_socketio import emit
 from cryptography.fernet import Fernet
 from datetime import datetime
 from app import socketio
@@ -17,6 +16,7 @@ def encrypt_message(message):
 
 def decrypt_message(encrypted_message):
     return cipher_suite.decrypt(encrypted_message.encode()).decode()
+
 
 ###################################### Private Chat (One-to-One Messaging) ###############################################
 @socketio.on("private_message")
