@@ -5,212 +5,401 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <style>
-        * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+        /* General Styles */
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
 
+        /* Chat Container */
+        .chat-container {
+            display: flex;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            height: 80vh; /* Changeable height */
+        }
 
-.chat-container {
-    width: 400px;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    height: 500px;
-}
+        /* Sidebar */
+        .sidebar {
+            width: 25%; /* Sidebar takes up 25% of the width */
+            background: #ffffff;
+            border-right: 1px solid #e0e0e0;
+            padding: 20px;
+            box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            height: 100%; /* Sidebar takes full height of chat-container */
+            overflow-y: auto;
+        }
 
-.chat-header {
-    background: #0066cc;
-    color: white;
-    padding: 20px;
-    text-align: center;
-    font-size: 1.5em;
-}
+        .sidebar h2 {
+            font-size: 1.5em;
+            color: #2d3e50;
+            margin-bottom: 1.5em;
+            font-weight: 600;
+        }
 
-.chat-body {
-    padding: 10px 20px;
-    overflow-y: auto;
-    flex: 1;
-    display: flex;
-    flex-direction: column-reverse;
-}
+        .meeting-btn,
+        .add-btn {
+            background-color: #4c8bf5;
+            color: white;
+            border: none;
+            padding: 1em;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 1em;
+            transition: background-color 0.3s ease;
+        }
 
-.message {
-    display: flex;
-    flex-direction: column;
-    margin: 10px 0;
-}
+        .meeting-btn:hover,
+        .add-btn:hover {
+            background-color: #3972d1;
+        }
 
-.message.sent {
-    align-items: flex-end;
-}
+        .search-bar {
+            width: 100%;
+            padding: 1em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 1.5em;
+            background-color: #f9f9f9;
+            transition: border-color 0.3s;
+        }
 
-.message.received {
-    align-items: flex-start;
-}
+        .search-bar:focus {
+            border-color: #4c8bf5;
+            outline: none;
+        }
 
-.message .bubble {
-    max-width: 70%;
-    padding: 10px;
-    border-radius: 20px;
-    font-size: 1em;
-    line-height: 1.5;
-    background: #f1f1f1;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    animation: fadeIn 0.3s ease-in-out;
-}
+        h3 {
+            font-size: 1.2em;
+            color: #4c8bf5;
+            margin-top: 1.5em;
+            font-weight: 600;
+        }
 
-.message.sent .bubble {
-    background: #0066cc;
-    color: white;
-}
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
 
-.chat-input-container {
-    display: flex;
-    padding: 15px;
-    background: #fff;
-    border-top: 1px solid #ddd;
-}
+        li {
+            padding: 1em;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
 
-.chat-input-container input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 25px;
-    border: 1px solid #ccc;
-    margin-right: 10px;
-    font-size: 1em;
-}
+        li:hover {
+            background-color: #f1f5fa;
+        }
 
-.chat-input-container button {
-    background: #0066cc;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 25px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
+        /* Main Chat Area */
+        .chat-area {
+            flex-grow: 1;
+            padding: 1.5em;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            height: 100%;
+        }
 
-.chat-input-container button:hover {
-    background: #004da8;
-}
+        .chat-area h2 {
+            font-size: 1.5em;
+            margin-bottom: 1em;
+            color: #2d3e50;
+            font-weight: 600;
+        }
 
-.loader {
-    text-align: center;
-    padding: 20px;
-    color: #0066cc;
-    display: none;
-}
+        .chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1em;
+            border: 1px solid #e0e0e0;
+            background: #f7f9fb;
+            border-radius: 8px;
+            min-height: 50vh;
+            margin-bottom: 1.5em;
+        }
 
-@keyframes fadeIn {
-    0% {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
+        .message {
+            padding: 1em 1.5em;
+            background: #4c8bf5;
+            color: white;
+            border-radius: 20px;
+            margin: 5px 0;
+            max-width: 75%;
+            word-wrap: break-word;
+        }
 
+        .user-message {
+            background-color: #2d3e50;
+            align-self: flex-end;
+        }
+
+        .empty-inbox {
+            color: #ccc;
+            font-size: 1.5em;
+            text-align: center;
+        }
+
+        .message-input {
+            display: flex;
+            gap: 1em;
+            align-items: center;
+        }
+
+        .message-input input {
+            flex-grow: 1;
+            padding: 1em 1.5em;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            font-size: 1em;
+            background-color: #f7f9fb;
+            transition: border-color 0.3s ease;
+        }
+
+        .message-input input:focus {
+            border-color: #4c8bf5;
+            outline: none;
+        }
+
+        .message-input button {
+            padding: 1em 1.5em;
+            background-color: #4c8bf5;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .message-input button:disabled {
+            background-color: #b0c3e1;
+            cursor: not-allowed;
+        }
+
+        .message-input button:hover:not(:disabled) {
+            background-color: #3972d1;
+        }
+
+        /* Modal for Creating Channels */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            padding: 2em;
+            border-radius: 10px;
+            box-shadow: 0px 2px 15px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            text-align: center;
+        }
+
+        .modal h3 {
+            font-size: 1.8em;
+            margin-bottom: 1.5em;
+            color: #2d3e50;
+            font-weight: 600;
+        }
+
+        .modal input {
+            padding: 1em;
+            border: 1px solid #ccc;
+            width: 100%;
+            margin-bottom: 1.5em;
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: #f7f9fb;
+        }
+
+        .modal button {
+            background-color: #4c8bf5;
+            color: white;
+            padding: 1em 1.5em;
+            font-size: 1em;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal button:hover {
+            background-color: #3972d1;
+        }
+
+        .modal .cancel-btn {
+            background-color: #e74c3c;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal .cancel-btn:hover {
+            background-color: #c0392b;
+        }
     </style>
 </head>
+
 <div id="layoutSidenav_content">
     <main>
         <div class="container-fluid px-4">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
             <div class="chat-container">
-                <div class="chat-header">
-                    <h1>Chat with Your Friend</h1>
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <h2>Discuss</h2>
+                    <button class="meeting-btn">Start a Meeting</button>
+                    <input type="text" id="search" placeholder="Find or start a conversation" class="search-bar">
+
+                    <h3>Channels</h3>
+                    <ul id="channels-list"></ul>
+                    <button class="add-btn" id="add-channel-btn">Add Channel</button>
+
+                    <h3>Direct Messages</h3>
+                    <ul id="dm-list"></ul>
+                    <button class="add-btn" id="add-dm-btn">Add Direct Message</button>
                 </div>
-                <div class="chat-body" id="chat-body">
-                    <!-- Messages will appear here -->
+
+                <!-- Main Chat Area -->
+                <div class="chat-area">
+                    <h2 id="chat-title">Inbox</h2>
+                    <div class="chat-messages" id="chat-messages">
+                        <p class="empty-inbox">Your inbox is empty</p>
+                    </div>
+                    <div class="message-input">
+                        <input type="text" id="message-input" placeholder="Type a message..." disabled>
+                        <button id="send-btn" disabled>Send</button>
+                    </div>
                 </div>
-                <div class="chat-input-container">
-                    <input type="text" id="message-input" placeholder="Type a message..." />
-                    <button onclick="sendMessage()" id="send-btn">Send</button>
-                </div>
-                <div class="loader" id="loader">Loading...</div>
-            </div>        
+            </div>
         </div>
     </main>
     {% include 'admin/admin_footer.html' %}
 </div>
 
+<!-- Modal for Creating Channels and DMs -->
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <h3>Create a New Channel</h3>
+        <input type="text" id="new-channel-name" placeholder="Enter Channel Name">
+        <div>
+            <button id="create-channel-btn">Create</button>
+            <button class="cancel-btn" id="cancel-btn">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const chatBody = document.getElementById('chat-body');
-const messageInput = document.getElementById('message-input');
-const sendBtn = document.getElementById('send-btn');
-const loader = document.getElementById('loader');
+    document.addEventListener("DOMContentLoaded", function () {
+        const channels = ["Administrators", "General", "Python Team"];
+        const directMessages = ["Ashton Royale", "OdooBot"];
+        
+        const channelsList = document.getElementById("channels-list");
+        const dmList = document.getElementById("dm-list");
+        const chatMessages = document.getElementById("chat-messages");
+        const chatTitle = document.getElementById("chat-title");
+        const messageInput = document.getElementById("message-input");
+        const sendButton = document.getElementById("send-btn");
+        const modal = document.getElementById("modal");
+        const cancelBtn = document.getElementById("cancel-btn");
+        const createChannelBtn = document.getElementById("create-channel-btn");
+        const addChannelBtn = document.getElementById("add-channel-btn");
+        const addDMBtn = document.getElementById("add-dm-btn");
+        const newChannelInput = document.getElementById("new-channel-name");
 
-let sender_id = 'user1'; // Example sender ID
-let receiver_id = 'user2'; // Example receiver ID
-let currentPage = 1;
-let limit = 20;
+        let currentChat = null;
+        let messages = {};
 
-async function fetchMessages() {
-    loader.style.display = 'block';
-    const response = await fetch(`/get_messages?sender_id=${sender_id}&receiver_id=${receiver_id}&page=${currentPage}`);
-    const messages = await response.json();
-    loader.style.display = 'none';
-    
-    messages.forEach(msg => {
-        displayMessage(msg);
+        // Function to load channels
+        function loadList(items, element) {
+            element.innerHTML = "";
+            items.forEach(item => {
+                let li = document.createElement("li");
+                li.textContent = item;
+                li.addEventListener("click", () => openChat(item));
+                element.appendChild(li);
+            });
+        }
+
+        // Load initial Channels & DMs
+        loadList(channels, channelsList);
+        loadList(directMessages, dmList);
+
+        // Open chat and load messages
+        function openChat(chatName) {
+            currentChat = chatName;
+            chatTitle.textContent = chatName;
+            messageInput.disabled = false;
+            sendButton.disabled = false;
+
+            // Display previous messages if available
+            if (!messages[chatName]) {
+                messages[chatName] = [];
+                chatMessages.innerHTML = "<p class='empty-inbox'>Start chatting!</p>";
+            } else {
+                chatMessages.innerHTML = "";
+                messages[chatName].forEach(msg => {
+                    const msgDiv = document.createElement("div");
+                    msgDiv.classList.add("message");
+                    msgDiv.textContent = msg;
+                    chatMessages.appendChild(msgDiv);
+                });
+            }
+        }
+
+        // Send a message
+        sendButton.addEventListener("click", () => {
+            const newMessage = messageInput.value;
+            if (newMessage.trim() === "") return;
+
+            if (!messages[currentChat]) {
+                messages[currentChat] = [];
+            }
+
+            messages[currentChat].push(newMessage);
+            openChat(currentChat); // Reload chat to update message
+            messageInput.value = ""; // Clear input field
+        });
+
+        // Modal for adding new channels
+        addChannelBtn.addEventListener("click", () => {
+            modal.style.display = "flex";
+        });
+
+        cancelBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+            newChannelInput.value = ""; // Clear input field
+        });
+
+        createChannelBtn.addEventListener("click", () => {
+            const newChannel = newChannelInput.value.trim();
+            if (newChannel !== "") {
+                channels.push(newChannel);
+                loadList(channels, channelsList);
+                modal.style.display = "none";
+                newChannelInput.value = ""; // Clear input field
+            }
+        });
     });
-}
-
-function displayMessage(msg) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message');
-    messageDiv.classList.add(msg.sender_id === sender_id ? 'sent' : 'received');
-    
-    const bubble = document.createElement('div');
-    bubble.classList.add('bubble');
-    bubble.innerText = msg.message_text;
-
-    messageDiv.appendChild(bubble);
-    chatBody.appendChild(messageDiv);
-}
-
-function sendMessage() {
-    const messageText = messageInput.value.trim();
-    if (messageText === '') return;
-
-    const message = {
-        sender_id: sender_id,
-        receiver_id: receiver_id,
-        message_text: messageText,
-        timestamp: new Date().toISOString()
-    };
-
-    // Display the sent message immediately (no server interaction here)
-    displayMessage(message);
-
-    // Reset input
-    messageInput.value = '';
-    
-    // Optionally send the message to the server to save in DB
-    // Example POST request:
-    // fetch('/send_message', { method: 'POST', body: JSON.stringify(message), headers: { 'Content-Type': 'application/json' } });
-}
-
-// Initial fetch when page loads
-fetchMessages();
-
 </script>

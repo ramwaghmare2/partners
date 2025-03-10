@@ -11,7 +11,7 @@ import uuid
 from datetime import datetime
 from routes.chat import decrypt_message
 
-chat_bp = Blueprint('chat_bp', __name__, static_folder='../static')
+chat_bp = Blueprint('chat_bp', __name__, static_folder='../static', template_folder='../templates')
 messages_collection = db_mongo.chat_messages
 
 def allowed_file(filename):
@@ -96,14 +96,16 @@ def get_messages():
         }
     ).sort("timestamp", -1).skip((page - 1) * limit).limit(limit)
 
-    
     unique_users = set()
     for msg in messages:
-        unique_users.add(msg["sender_id"])
-        unique_users.add(msg["receiver_id"])
-
+        if "sender_id" in msg:
+            unique_users.add(msg["sender_id"])
+        if "receiver_id" in msg:
+            unique_users.add(msg["receiver_id"])
+    import pymysql
     connection = get_db_connection()
-    cursor = connection.cursor(dictionary=True)
+    cursor = connection.cursor(pymysql.cursors.DictCursor)
+
     
     user_details = {}
     tables = {
@@ -127,14 +129,13 @@ def get_messages():
 
     cursor.close()
     connection.close()
-    
     messages_list = []
     for msg in messages:
         messages_list.append({
-            "message_id": msg["_id"],
-            "sender_id": msg["sender_id"],
+            "message_id": objectid_to_str(msg["_id"]),
+            "sender_id": objectid_to_str(msg["sender_id"]),
             "sender_id": user_details.get(msg["sender_id"], "Unknown"),
-            "receiver_id": msg["receiver_id"],
+            "receiver_id": objectid_to_str(msg["receiver_id"]),
             "receiver": user_details.get(str(msg["receiver_id"]), "Unknown"),
             "message": decrypt_message(msg["message"]) if msg.get("message") else None,
             "timestamp": msg["timestamp"]
@@ -142,7 +143,7 @@ def get_messages():
         })
 
 
-    return jsonify(messages_list)
+    return render_template('chats/get_messages.html')
 
 
 ####################################### Fetch Group Messages ######################################
