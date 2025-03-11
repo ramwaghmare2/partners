@@ -14,3 +14,6 @@ __pycache__/
 
 # Order Bill's file
 /order_bills/
+
+# Pos bill path file
+/pos_bill_path/

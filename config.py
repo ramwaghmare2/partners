@@ -1,14 +1,21 @@
 ###################################### Importing Required Libraries ###################################
-from sqlalchemy import create_engine, MetaData, Table
+from sqlalchemy import create_engine
 from datetime import timedelta
 from pymongo import MongoClient
 import os
-import pymysql
 
-engine = create_engine(os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA'))
 
+engine = create_engine(
+    os.environ.get('DATABASE_URL', 'mysql+pymysql://root:root@localhost/FDHMSA'),
+    pool_size=10,  # ✅ Maximum 10 connections in the pool
+    max_overflow=5,  # ✅ Allow up to 5 extra connections
+    pool_recycle=1800,  # ✅ Recycle connections every 30 minutes
+    pool_pre_ping=True  # ✅ Check connections before using
+)
+
+###################################### Function to Get Database Connection (for raw queries) ###########
 def get_db_connection():
-    return engine.raw_connection()
+    return engine.connect()
 
 ###################################### Configuration Class ############################################
 class Config:
