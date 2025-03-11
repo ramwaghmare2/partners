@@ -1,11 +1,11 @@
 from flask import current_app
 from flask_socketio import emit
-from cryptography.fernet import Fernet
 from datetime import datetime
 from app import socketio
 from mdb_connection import messages_collection, groups_collection, global_chat_collection
 import uuid
 import json
+from cryptography.fernet import Fernet
 
 ####################################### Generate AES Encryption Key (Run Once & Store Securely) ######################################
 encryption_key = Fernet.generate_key()
@@ -16,7 +16,6 @@ def encrypt_message(message):
 
 def decrypt_message(encrypted_message):
     return cipher_suite.decrypt(encrypted_message.encode()).decode()
-
 
 ###################################### Private Chat (One-to-One Messaging) ###############################################
 @socketio.on("private_message")
