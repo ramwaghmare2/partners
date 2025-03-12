@@ -94,7 +94,7 @@
         }
 
         li {
-            padding: 1em;
+            padding: 0.4em;
             border-radius: 8px;
             font-size: 1em;
             cursor: pointer;
@@ -285,11 +285,20 @@
                 <div class="chat-area">
                     <h2 id="chat-title">Inbox</h2>
                     <div class="chat-messages" id="chat-messages">
-                        <p class="empty-inbox">Your inbox is empty</p>
+                        {% if messages %}
+                            {% for msg in messages %}
+                                <div class="message{% if msg.sender_name == user_name.name %} user-message{% endif %}">
+                                    <strong>{{ msg.sender_name }}:</strong> {{ msg.message }}
+                                    <span class="timestamp">{{ msg.timestamp }}</span>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="empty-inbox">Your inbox is empty</p>
+                        {% endif %}
                     </div>
                     <div class="message-input">
-                        <input type="text" id="message-input" placeholder="Type a message..." disabled>
-                        <button id="send-btn" disabled>Send</button>
+                        <input type="text" id="message-input" placeholder="Type a message...">
+                        <button id="send-btn">Send</button>
                     </div>
                 </div>
             </div>
@@ -312,8 +321,8 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const channels = ["Administrators", "General", "Python Team"];
-        const directMessages = ["Ashton Royale", "OdooBot"];
+        const channels = [];
+        const directMessages = [];
         
         const channelsList = document.getElementById("channels-list");
         const dmList = document.getElementById("dm-list");
@@ -368,19 +377,6 @@
             }
         }
 
-        // Send a message
-        sendButton.addEventListener("click", () => {
-            const newMessage = messageInput.value;
-            if (newMessage.trim() === "") return;
-
-            if (!messages[currentChat]) {
-                messages[currentChat] = [];
-            }
-
-            messages[currentChat].push(newMessage);
-            openChat(currentChat); // Reload chat to update message
-            messageInput.value = ""; // Clear input field
-        });
 
         // Modal for adding new channels
         addChannelBtn.addEventListener("click", () => {
@@ -402,4 +398,87 @@
             }
         });
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const sendButton = document.getElementById("send-btn");
+    const messageInput = document.getElementById("message-input");
+    const chatMessages = document.getElementById("chat-messages");
+
+    // Make sure currentChat is defined or set a default value
+    let currentChat = 'Inbox'; // or another default chat
+
+    sendButton.addEventListener("click", async function () {
+        const message = messageInput.value.trim();
+        const receiverId = currentChat; // Set the receiver ID based on the current chat
+
+        // Don't send if the message is empty
+        if (message === "") {
+            alert("Message cannot be empty");
+            return;
+        }
+
+        // Disable the send button while the request is being processed
+        sendButton.disabled = true;
+
+        // Prepare data to send
+        const data = {
+            receiver_id: receiverId,
+            message: message
+        };
+
+        // Optimistically add the message to the UI first (before sending the request)
+        addMessageToChat({ message: message, sender_id: "user" });
+
+        try {
+            // Send the message using the Fetch API
+            const response = await fetch("/chat/send_message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data) // Send the message and receiver ID as JSON
+            });
+
+            if (response.ok) {
+                // Get the response data
+                const responseData = await response.json();
+
+                // Optionally update message status if needed (e.g., marking as "sent" or updating UI)
+                console.log("Message sent successfully:", responseData);
+                // Here, you can optionally update the message or its status
+            } else {
+                // If something went wrong, display an error
+                const errorText = await response.text();
+                console.error("Failed to send message:", errorText);
+                alert("Failed to send the message: " + errorText);  // Show alert in case of failure
+            }
+        } catch (error) {
+            // Handle any network errors
+            console.error("Error sending message:", error);
+            alert("Network error: " + error.message);
+        } finally {
+            // Re-enable the send button after the request is complete
+            sendButton.disabled = false;
+            messageInput.value = ""; // Clear the input field
+        }
+    });
+
+    // Function to add message to the chat UI
+    function addMessageToChat(messageData) {
+        const newMessageDiv = document.createElement("div");
+        newMessageDiv.classList.add("message");
+
+        // If the sender is the user, we can style it differently
+        if (messageData.sender_id === "user") {
+            newMessageDiv.classList.add("user-message");
+        }
+
+        newMessageDiv.textContent = messageData.message;  // Display the message text
+        chatMessages.appendChild(newMessageDiv);
+
+        // Scroll to the bottom of the chat area after adding a new message
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+});
+
 </script>

@@ -2,7 +2,7 @@ import os
 from utils.services import get_image, get_user_query
 from utils.notification_service import check_notification
 from werkzeug.utils import secure_filename
-from flask import request, jsonify, Blueprint, current_app, session, redirect
+from flask import request, jsonify, Blueprint, current_app, session, redirect, render_template
 from mdb_connection import messages_collection, global_chat_collection
 from config import get_db_connection 
 from mdb_connection import messages_collection, db_mongo
@@ -59,12 +59,13 @@ def get_chat_users():
     #except Exception as e:
         #return jsonify({"status": "error", "message": str(e)})
 
-####################################### Send Message routes ######################################
+
 @chat_bp.route("/send_message", methods=["POST"])
 def send_message():
     user_id = session.get('user_id')
     role = session.get('role')
 
+    # Check if the user is authorized
     if not user_id or not role:
         return jsonify({"error": "Unauthorized"}), 401  
 
@@ -73,27 +74,47 @@ def send_message():
     receiver_id = data.get("receiver_id")
     message = data.get("message")
 
+    # Ensure the receiver_id and message are present
     if not receiver_id or not message:
         return jsonify({"error": "Missing required fields"}), 400
+    import pytz
 
+    # Get the current UTC time
+    utc_now = datetime.utcnow()
+
+    # Define the IST timezone
+    ist_timezone = pytz.timezone("Asia/Kolkata")
+
+    # Convert UTC time to IST
+    ist_now = pytz.utc.localize(utc_now).astimezone(ist_timezone)
+    # Create the message data to insert
     message_data = {
         "sender_id": sender_id,
         "receiver_id": receiver_id,
-        "message": encrypt_message(message),  
-        "timestamp": datetime.utcnow(),
-        "status": "sent"  
+        "message": encrypt_message(message),  # Encrypt the message before saving
+        "timestamp": ist_now,
+        "status": "sent"  # Status is 'sent' when it's first inserted
     }
 
-    inserted_message = messages_collection.insert_one(message_data)
+    try:
+        # Insert message into the database
+        inserted_message = messages_collection.insert_one(message_data)
 
-    return jsonify({
-        "message_id": str(inserted_message.inserted_id),
-        "sender_id": sender_id,
-        "receiver_id": receiver_id,
-        "message": message,
-        "timestamp": message_data["timestamp"],
-        "status": "sent"
-    }), 201
+        # Return the message response with a decrypted message for display
+        return jsonify({
+            "message_id": str(inserted_message.inserted_id),
+            "sender_id": sender_id,
+            "receiver_id": receiver_id,
+            "message": message,  # Send the original message (or send encrypted data if required)
+            "timestamp": message_data["timestamp"],
+            "status": "sent"
+        }), 201
+
+    except Exception as e:
+        # Handle potential database errors
+        return jsonify({"error": f"Failed to send message: {str(e)}"}), 500
+
+
 
 ####################################### Fetch Private Messages ######################################
 from bson import ObjectId
@@ -111,15 +132,18 @@ def get_messages():
     if not user_id or not role:
         return redirect('/login')  
 
+    # Fetch user details (name, image, notifications)
     user_name = get_user_query(role, user_id)
     encoded_image = get_image(role, user_id)
     notification_check = check_notification(role, user_id)
 
     sender_id = request.args.get("sender_id")
+    print(sender_id)
     receiver_id = request.args.get("receiver_id")
     page = int(request.args.get("page", 1))
     limit = 20
 
+    # Query for total messages
     total_messages = messages_collection.count_documents(
         {
             "$or": [
@@ -129,6 +153,7 @@ def get_messages():
         }
     )
 
+    # Get the actual messages with pagination
     messages_cursor = messages_collection.find(
         {
             "$or": [
@@ -138,105 +163,65 @@ def get_messages():
         }
     ).sort("timestamp", -1).skip((page - 1) * limit).limit(limit)
 
-<<<<<<< HEAD
-    unique_users = set()
-    for msg in messages:
-        if "sender_id" in msg:
-            unique_users.add(msg["sender_id"])
-        if "receiver_id" in msg:
-            unique_users.add(msg["receiver_id"])
-    import pymysql
-    connection = get_db_connection()
-    cursor = connection.cursor(pymysql.cursors.DictCursor)
-
-    
-    user_details = {}
-    tables = {
-        "Admin": "admins",
-        "Manager": "managers",
-        "Super Distributor": "super_distributors",
-        "Distributor": "distributors",
-        "Kitchen": "kitchens",
-    }
-
-    for user in unique_users:
-        role, user_id = user.split("-")
-        if role in tables:
-            query = f"SELECT name FROM {tables[role]} WHERE id = {user_id}"
-            cursor.execute(query)
-            result = cursor.fetchone()
-            if result:
-                user_details[user] = result["name"]
-            else:
-                user_details[user] = "Unknown"
-
-    cursor.close()
-    connection.close()
-    messages_list = []
-    for msg in messages:
-        messages_list.append({
-            "message_id": objectid_to_str(msg["_id"]),
-            "sender_id": objectid_to_str(msg["sender_id"]),
-            "sender_id": user_details.get(msg["sender_id"], "Unknown"),
-            "receiver_id": objectid_to_str(msg["receiver_id"]),
-=======
     messages = list(messages_cursor)
+    print(messages)
     total_pages = (total_messages + limit - 1) // limit  # Calculate total pages
-    
+
+    # Collect unique users (sender and receiver) for batch query
     unique_users = set()
     for msg in messages:
-        if "sender_id" in msg and "receiver_id" in msg:
-            unique_users.add(msg["sender_id"])
-            unique_users.add(msg["receiver_id"])
+        unique_users.add(msg.get("sender_id"))
+        unique_users.add(msg.get("receiver_id"))
 
+    # Batch query users to get their names
     connection = get_db_connection()
     try:
-        result = connection.execute("SELECT id, name FROM Admin")
-        users = [dict(row) for row in result]
-        
-        user_details = {}
-        tables = {
-            "Admin": "admins",
-            "Manager": "managers",
-            "Super Distributor": "super_distributors",
-            "Distributor": "distributors",
-            "Kitchen": "kitchens",
-        }
+        from sqlalchemy import text
+        placeholders = ", ".join([f"'{user}'" for user in unique_users])
+        query = f"SELECT id, name FROM Admins WHERE id IN ({placeholders})"
+        result = connection.execute(text(query)).fetchall()
 
-        for user in unique_users:
-            role, user_id = user.split("-")
-            if role in tables:
-                query = f"SELECT name FROM {tables[role]} WHERE id = {user_id}"
-                result = connection.execute(query, (user_id)).fetchone()
-                user_details[user] = result["name"] if result else "Unknown"
-    
+        # Map user details by role and user_id
+        user_details = {f"{row['role']}-{row['id']}": row['name'] for row in result}
+        print(result)
     finally:
         connection.close()
-    
+
+    # Prepare messages with sender/receiver names
     messages_list = []
     for msg in messages:
+        #sender_name = user_details.get(f"{msg['sender_id']}", "Unknown")
+        #receiver_name = user_details.get(f"{msg['receiver_id']}", "Unknown")
+        
+        # Add the message data along with sender and receiver names
         messages_list.append({
-            "message_id": str(msg["_id"]),
-            "sender_id": msg["sender_id"],
-            "sender_name": user_details.get(str(msg["sender_id"]), "Unknown"),
-            "receiver_id": msg["receiver_id"],
->>>>>>> partners--018
-            "receiver": user_details.get(str(msg["receiver_id"]), "Unknown"),
-            "message": decrypt_message(msg["message"]) if msg.get("message") else None,
-            "timestamp": msg["timestamp"]
+            "message_id": objectid_to_str(msg["_id"]),
+            #"sender_name": sender_name,
+            #"receiver_name": receiver_name,
+            "message": msg["message"],  # Ensure you decrypt the message if it's encrypted
+            #"timestamp": msg["timestamp"]
         })
+    # Render the template with messages and other data
+    return render_template(
+        'chats/get_messages.html',
+        role=role,
+        encoded_image=encoded_image,
+        user_name=user_name.name,
+        notification_check=len(notification_check),
+        messages=messages_list,
+        total_pages=total_pages,  # Pass total pages for pagination
+        current_page=page  # Pass the current page number for frontend pagination control
+    )
 
-    return jsonify({
-        "total_messages": total_messages,
-        "total_pages": total_pages,
-        "current_page": page,
-        "messages": messages_list
-    })
 
-<<<<<<< HEAD
-    return render_template('chats/get_messages.html')
-=======
->>>>>>> partners--018
+
+    # return jsonify({
+    #     "total_messages": total_messages,
+    #     "total_pages": total_pages,
+    #     "current_page": page,
+    #     "messages": messages_list
+    # })
+
 
 
 ####################################### Fetch Group Messages ######################################

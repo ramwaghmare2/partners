@@ -1,1 +1,1 @@
-BILL_SAVE_PATH = r"C:\Users\Ram\Desktop\Restaurant_Bills"
+BILL_SAVE_PATH = r"C:\Users\tiwar\Desktop\Restaurant_Bills"
