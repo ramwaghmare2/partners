@@ -138,7 +138,6 @@ def get_messages():
     notification_check = check_notification(role, user_id)
 
     sender_id = request.args.get("sender_id")
-    print(sender_id)
     receiver_id = request.args.get("receiver_id")
     page = int(request.args.get("page", 1))
     limit = 20
@@ -164,7 +163,6 @@ def get_messages():
     ).sort("timestamp", -1).skip((page - 1) * limit).limit(limit)
 
     messages = list(messages_cursor)
-    print(messages)
     total_pages = (total_messages + limit - 1) // limit  # Calculate total pages
 
     # Collect unique users (sender and receiver) for batch query
