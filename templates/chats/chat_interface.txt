@@ -1,0 +1,40 @@
+{% include 'admin/admin_header.html' %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat System</title>
+    <link rel="stylesheet" href="static\css\chat_css\styles.css">
+    <script defer src="static\js\chat_js\client_side.js"></script>
+    <script defer src="static\js\chat_js\fetch_user_chat.js"></script>
+    <script defer src="static\js\chat_js\global_chat.js"></script>
+    <script defer src="static\js\chat_js\group_chat.js"></script>
+    <script defer src="static\js\chat_js\private_chat.js"></script>
+    <script defer src="static\js\chat_js\wensocket.js"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <aside class="user-list">
+            <h2>Contacts</h2>
+            <ul id="chat-list"></ul>
+        </aside>
+        <main class="chat-window">
+            <header>
+                <h2 id="chat-title">Select a user to chat</h2>
+            </header>
+            <section id="chat-box" class="messages"></section>
+            <footer>
+                <input type="text" id="message-input" placeholder="Type a message...">
+                <button onclick="sendCurrentMessage()">Send</button>
+                <input type="file" id="file-upload" onchange="sendFile()">
+            </footer>
+        </main>
+    </div>
+    <div class="video-chat">
+        <video id="localVideo" autoplay></video>
+        <video id="remoteVideo" autoplay></video>
+        <button onclick="callUser()">Start Call</button>
+    </div>
+    {% include 'admin/admin_footer.html' %}
+
+</body>
+</html>
