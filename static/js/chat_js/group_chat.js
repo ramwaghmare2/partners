@@ -1,8 +1,14 @@
-function sendGroupMessage(sender_id, group_id, message) {
-    socket.emit('group_message', { sender_id, group_id, message });
-}
+// Import sendGroupMessage from client_side.js
+import { sendGroupMessage } from "./client_side.js";
 
-// Listen for group messages
-socket.on(`group_message_${USER_ID}`, (data) => {
-    console.log("New group message:", data.message);
-});
+// Get the current user ID dynamically (assuming it's stored in sessionStorage)
+const userId = sessionStorage.getItem("user_id") || localStorage.getItem("user_id");
+
+if (userId) {
+    // Listen for group messages dynamically
+    socket.on(`group_message_${userId}`, (data) => {
+        console.log("New group message:", data.message);
+    });
+} else {
+    console.error("User ID not found. Group chat listener not initialized.");
+}

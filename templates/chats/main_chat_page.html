@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat System</title>
+    <link rel="stylesheet" href="static\css\chat_css\styles.css">
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="static\js\chat_js\client_side.js" defer></script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <h2>Chat System</h2>
+            <ul id="chat-list"></ul>
+            <div class="chat-box">
+                <ul id="messages"></ul>
+                <input type="text" id="message-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</body>
+</html>

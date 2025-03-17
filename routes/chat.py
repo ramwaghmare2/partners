@@ -183,7 +183,9 @@ def message_seen(data):
 @socketio.on("offer")
 def handle_offer(data):
     receiver_id = data["receiver_id"]
+    sender_id = data["sender_id"]  # ✅ Ensure sender ID is included
     emit("receive_offer", data, room=receiver_id)
+
 
 @socketio.on("answer")
 def handle_answer(data):

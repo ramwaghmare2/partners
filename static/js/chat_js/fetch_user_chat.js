@@ -1,15 +1,28 @@
 async function getChatUsers() {
-    const response = await fetch("/get_chat_users");
-    const users = await response.json();
+    try {
+        const response = await fetch("/chat/get_chat_users");
+        if (!response.ok) throw new Error("Failed to fetch chat users");
 
-    const chatList = document.getElementById("chat-list");
-    chatList.innerHTML = "";
+        const users = await response.json();
+        if (!Array.isArray(users)) throw new Error("Invalid response format");
 
-    users.forEach(user => {
-        const userItem = document.createElement("li");
-        userItem.innerHTML = `${user.name} (${user.role})`;
-        userItem.dataset.id = user.id;  // Example: "Admin-4"
-        userItem.onclick = () => openChat(user.id, user.name);
-        chatList.appendChild(userItem);
-    });
+        const chatList = document.getElementById("chat-list");
+        chatList.innerHTML = "";
+
+        users.forEach(user => {
+            const userItem = document.createElement("li");
+            userItem.innerHTML = `${user.name} (${user.role})`;
+            userItem.dataset.id = user.id;  // Example: "Admin-4"
+
+            if (typeof openChat === "function") {
+                userItem.onclick = () => openChat(user.id, user.name);
+            } else {
+                console.warn("openChat function is not defined.");
+            }
+
+            chatList.appendChild(userItem);
+        });
+    } catch (error) {
+        console.error("Error fetching chat users:", error.message);
+    }
 }

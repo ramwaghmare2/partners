@@ -120,9 +120,7 @@ def send_message():
 from bson import ObjectId
 
 def objectid_to_str(obj):
-    if isinstance(obj, ObjectId):
-        return str(obj)
-    raise TypeError("ObjectId is not serializable")
+    return str(obj) if isinstance(obj, ObjectId) else obj
 
 @chat_bp.route("/get_messages", methods=["GET"])
 def get_messages():
@@ -142,7 +140,9 @@ def get_messages():
     page = int(request.args.get("page", 1))
     limit = 20
 
-    # Query for total messages
+    if not sender_id or not receiver_id:
+      return jsonify({"error": "Invalid sender or receiver ID"}), 400   
+
     total_messages = messages_collection.count_documents(
         {
             "$or": [
@@ -170,6 +170,12 @@ def get_messages():
     for msg in messages:
         unique_users.add(msg.get("sender_id"))
         unique_users.add(msg.get("receiver_id"))
+
+    # Query MongoDB for user details
+    users_data = list(users_collection.find({"_id": {"$in": list(unique_users)}}, {"_id": 1, "name": 1, "role": 1}))
+
+    # Convert to dictionary for fast lookup
+    user_details = {str(user["_id"]): user["name"] for user in users_data}
 
     # Batch query users to get their names
     connection = get_db_connection()
@@ -200,8 +206,15 @@ def get_messages():
             #"timestamp": msg["timestamp"]
         })
     # Render the template with messages and other data
+    return jsonify({
+        "messages": messages_list,
+        "total_pages": total_pages,
+        "current_page": page
+    })
+
+"""
     return render_template(
-        'chats/get_messages.html',
+        'chats/main_chat_page.html',
         role=role,
         encoded_image=encoded_image,
         user_name=user_name.name,
@@ -209,18 +222,7 @@ def get_messages():
         messages=messages_list,
         total_pages=total_pages,  # Pass total pages for pagination
         current_page=page  # Pass the current page number for frontend pagination control
-    )
-
-
-
-    # return jsonify({
-    #     "total_messages": total_messages,
-    #     "total_pages": total_pages,
-    #     "current_page": page,
-    #     "messages": messages_list
-    # })
-
-
+    )"""
 
 ####################################### Fetch Group Messages ######################################
 @chat_bp.route("/get_group_messages", methods=["GET"])

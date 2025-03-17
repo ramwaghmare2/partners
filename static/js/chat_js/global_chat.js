@@ -1,8 +1,5 @@
-function sendGlobalMessage(sender_id, message) {
-    socket.emit('global_message', { sender_id, message });
-}
+// Import sendGlobalMessage from client_side.js
+import { sendGlobalMessage } from "./client_side.js";
 
-// Listen for global chat messages
-socket.on("global_chat", (data) => {
-    console.log("New global message:", data.message);
-});
+// Listen for global chat messages (Handled in client_side.js)
+console.log("Global chat module loaded.");
