@@ -1,21 +1,42 @@
 from flask import current_app
-from flask_socketio import emit
+from flask_socketio import emit, join_room
 from datetime import datetime
 from app import socketio
 from mdb_connection import messages_collection, groups_collection, global_chat_collection
 import uuid
 import json
+import os
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
 
-####################################### Generate AES Encryption Key (Run Once & Store Securely) ######################################
-encryption_key = Fernet.generate_key()
-cipher_suite = Fernet(encryption_key)
+####################################### Load Encryption Key #######################################
+load_dotenv()
+encryption_key = os.getenv("ENCRYPTION_KEY")
+
+if not encryption_key:
+    raise ValueError("Encryption key is missing. set ENCRYPTION_KEY in environment variables.")
+
+try:
+    encryption_key = encryption_key.encode()
+    cipher_suite = Fernet(encryption_key)
+except Exception as e:
+    raise ValueError(f"Invalid encryption key. Ensure it is correct and try again. Error: {e}")
 
 def encrypt_message(message):
     return cipher_suite.encrypt(message.encode()).decode()
 
 def decrypt_message(encrypted_message):
     return cipher_suite.decrypt(encrypted_message.encode()).decode()
+
+
+@socketio.on("join")
+def handle_join(data):
+    """Users should join a room upon connection."""
+    user_id = data.get("user_id")
+    if user_id:
+        join_room(user_id)
+        emit("room_joined",{"user_id": user_id, "message": "You have joined the room."}, room=user_id)
+        
 
 ###################################### Private Chat (One-to-One Messaging) ###############################################
 @socketio.on("private_message")

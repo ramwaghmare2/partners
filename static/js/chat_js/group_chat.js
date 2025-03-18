@@ -12,3 +12,8 @@ if (userId) {
 } else {
     console.error("User ID not found. Group chat listener not initialized.");
 }
+
+function sendGroupMessage() {
+    const messageContainer = document.getElementById("group-messages");
+    messageContainer.scrollTop = messageContainer.scrollHeight; // Auto-scroll
+}

@@ -12,5 +12,16 @@
         <input type="text" id="private-message" placeholder="Type a message">
         <button onclick="sendPrivateMessage()">Send</button>
     </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const senderId = sessionStorage.getItem("user_id");
+        const receiverId = sessionStorage.getItem("receiver_id");
+        if (senderId && receiverId) {
+            loadChatHistory(senderId, receiverId);
+        }
+    });
+</script>
+
 </body>
 </html>
