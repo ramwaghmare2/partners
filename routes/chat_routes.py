@@ -2,27 +2,79 @@ import os
 from utils.services import get_image, get_user_query
 from utils.notification_service import check_notification
 from werkzeug.utils import secure_filename
-from flask import request, jsonify, Blueprint, current_app, session, redirect, render_template
-from mdb_connection import messages_collection, global_chat_collection
-from config import get_db_connection 
-from mdb_connection import messages_collection, db_mongo
+from flask import request, jsonify, Blueprint, current_app, session, redirect
+from mdb_connection import messages_collection, global_chat_collection, users_collection
+from config import get_db_connection
 import uuid
+from routes.chat import encrypt_message
 from datetime import datetime
-from routes.chat import encrypt_message, decrypt_message
+from bson import ObjectId
+import pytz
 
-chat_bp = Blueprint('chat_bp', __name__, static_folder='../static', template_folder='../templates')
-messages_collection = db_mongo.chat_messages
+chat_bp = Blueprint('chat', __name__, static_folder='../static', template_folder='../templates')
+
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf", "docx"}
+MAX_FILE_SIZE = 10 * 1024 * 1024
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in current_app.config["ALLOWED_EXTENSIONS"]
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 ####################################### Fetch All Users for Chat ######################################
 @chat_bp.route("/get_chat_users", methods=["GET"])
 def get_chat_users():
+        connection = None
+        cursor = None
+        try:
+            connection = get_db_connection()
+            cursor = connection.cursor(dictionary=True)
+
+            tables = {
+                "Admin": "Admin",
+                "Manager": "Manager",
+                "Super Distributor": "Super_Distributor",
+                "Distributor": "Distributor",
+                "Kitchen": "Kitchen"
+            }
+
+            users_list = []
+
+            for role, table in tables.items():
+                query = f"SELECT id, name, contact, email FROM {table}"
+                cursor.execute(query)
+                users = cursor.fetchall()
+
+                for user in users:
+                    users_list.append({
+                        "id": user["id"], 
+                        "name": user["name"], 
+                        "role": role,
+                        "contact": user['contact'],
+                        "email": user['email']
+                    })
+
+            return jsonify({"status": "success", "users": users_list})
+    
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)})
+        
+        finally:
+            if cursor:
+                cursor.close()
+            if connection:
+                connection.close()
+
+####################################### Search Users for Chat ######################################
+@chat_bp.route("/search_chat_users", methods=["GET"])
+def search_chat_users():
+    connection = None
+    cursor = None
     try:
+        search_query = request.args.get("query", "").strip()
+        if not search_query:
+            return jsonify({"status": "error", "message": "Search query is required"}), 400
+        
         connection = get_db_connection()
         cursor = connection.cursor(dictionary=True)
-
         
         tables = {
             "Admin": "Admin",
@@ -35,29 +87,34 @@ def get_chat_users():
         users_list = []
 
         for role, table in tables.items():
-            query = f"SELECT id, name FROM {table}"
-            cursor.execute(query)
+            query = f"""
+                SELECT id, name, mobile, email 
+                FROM {table} 
+                WHERE name LIKE %s OR mobile LIKE %s OR email LIKE %s
+            """
+            search_param = f"%{search_query}%"
+            cursor.execute(query, (search_param, search_param, search_param))
             users = cursor.fetchall()
 
             for user in users:
                 users_list.append({
-                    "id": user["id"], 
+                    "id": user["id"],
                     "name": user["name"],
-                    "role": role
+                    "role": role,
+                    "mobile": user["mobile"],
+                    "email": user["email"]
                 })
-
-        cursor.close()
-        connection.close()
 
         return jsonify({"status": "success", "users": users_list})
     
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)})
+    
     finally:
-        cursor.close()
-        connection.close()
-        
-
-    #except Exception as e:
-        #return jsonify({"status": "error", "message": str(e)})
+        if cursor:
+            cursor.close()
+        if connection:
+            connection.close()
 
 
 @chat_bp.route("/send_message", methods=["POST"])
@@ -65,18 +122,21 @@ def send_message():
     user_id = session.get('user_id')
     role = session.get('role')
 
+    print(f"🔍 Checking session data - user_id: {user_id}, role: {role}")  # Debugging
+
     # Check if the user is authorized
     if not user_id or not role:
-        return jsonify({"error": "Unauthorized"}), 401  
+        return jsonify({"error": "Unauthorized", "details": "Missing user_id or rile in session"}), 401  
 
     data = request.get_json()
     sender_id = f"{role}-{user_id}"  
     receiver_id = data.get("receiver_id")
     message = data.get("message")
+    print(f"✅ API Request - sender_id: {sender_id}, receiver_id: {receiver_id}")  # Debugging
 
     # Ensure the receiver_id and message are present
     if not receiver_id or not message:
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"error": "Missing required fields", "details": {"receiver_id": reciver_id, "message": message}}), 400
     import pytz
 
     # Get the current UTC time
@@ -113,7 +173,6 @@ def send_message():
     except Exception as e:
         # Handle potential database errors
         return jsonify({"error": f"Failed to send message: {str(e)}"}), 500
-
 
 
 ####################################### Fetch Private Messages ######################################
@@ -250,11 +309,13 @@ def upload_file():
     if not allowed_file(file.filename):
         return jsonify({"error": "Invalid file type"}), 400
 
-    file_size = file.seek(0, os.SEEK_END)
-    if file_size > 10 * 1024 * 1024:  
-        return jsonify({"error": "File too large"}), 400
-
-    file.seek(0)  
+    file.seek(0, os.SEEK_END)
+    file_size = file.tell()  
+    file.seek(0)
+    
+    if file_size > MAX_FILE_SIZE:
+        return jsonify({"error": "File size exceeds the limit"}), 400
+    
     filename = secure_filename(file.filename)
     file_path = os.path.join(current_app.config["UPLOAD_FOLDER"], filename)
     file.save(file_path)

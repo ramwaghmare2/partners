@@ -14,9 +14,14 @@
             <ul id="chat-list"></ul>
             <div class="chat-box">
                 <ul id="messages"></ul>
+                <input type="text" id="search-input" placeholder="Search users..." onkeyup="searchChatUsers(this.value)">
                 <input type="text" id="message-input" placeholder="Type a message...">
             <button onclick="sendMessage()">Send</button>
         </div>
     </div>
 </body>
 </html>
+
+<script>
+    document.addEventListener("DOMContentLoaded", getChatUsers);
+</script>
