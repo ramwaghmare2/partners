@@ -101,3 +101,21 @@ function addMessage(sender, message) {
     // ✅ Auto-scroll to the latest message
     messageList.scrollTop = messageList.scrollHeight;
 }
+
+// Uploads files
+async function uploadFile(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await fetch("/chat/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const result = await response.json();
+        console.log("File uploaded:", result.file_url);
+    } catch (error) {
+        console.error("File upload failed:", error.message);
+    }
+}
