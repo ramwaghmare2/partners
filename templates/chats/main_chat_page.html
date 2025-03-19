@@ -1,27 +1,292 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat System</title>
-    <link rel="stylesheet" href="static\css\chat_css\styles.css">
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="static\js\chat_js\client_side.js" defer></script>
+    <title>Chat Application UI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .chat-container { display: flex; height: 100vh; }
+        .sidebar { width: 300px; background: #343a40; color: white; padding: 15px; overflow-y: auto; }
+        .chat-window { flex-grow: 1; background: white; display: flex; flex-direction: column; }
+        .chat-header { background: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .chat-search { padding: 10px; background: #e9ecef; }
+        .chat-body { flex-grow: 1; padding: 15px; overflow-y: auto; }
+        .chat-footer { padding: 10px; background: #f1f1f1; display: flex; }
+        .chat-footer input { flex-grow: 1; margin-right: 10px; }
+        .list-group-item { cursor: pointer; }
+        .list-group-item:hover { background: rgba(255, 255, 255, 0.2); }
+    </style>
 </head>
 <body>
     <div class="chat-container">
+        <!-- Left Sidebar -->
         <div class="sidebar">
-            <h2>Chat System</h2>
-            <ul id="chat-list"></ul>
-            <div class="chat-box">
-                <ul id="messages"></ul>
-                <input type="text" id="search-input" placeholder="Search users..." onkeyup="searchChatUsers(this.value)">
-                <input type="text" id="message-input" placeholder="Type a message...">
-            <button onclick="sendMessage()">Send</button>
+            <h4>Chat App</h4>
+            <button class="btn btn-primary w-100 mb-2">+ Create Group</button>
+            <button class="btn btn-primary w-100 mb-2">+ Create Channel</button>
+            
+            <h6 class="mt-3">Personal Chats</h6>
+            <ul class="list-group" id="personalChats">
+                {% for chat in personal_chats %}
+                <li class="list-group-item bg-transparent text-white" onclick="openChat('{{ chat.receiver_id }}', '{{ chat.receiver_name }}', '{{ chat.receiver_role }}')">
+
+                        {{ chat.receiver_name }}
+                    </li>
+                {% endfor %}
+            </ul>
+            
+
+        </div>
+
+        <!-- Right Chat Window -->
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-search">
+                <input type="text" class="form-control" id="searchUser" placeholder="Search user...">
+                <div id="searchResults" class="list-group position-absolute bg-white shadow-sm" style="z-index:1000;width: 76.5%;"></div>
+            </div>
+            <div class="chat-header">
+                <h5 id="chatTitle">Select a Chat</h5>
+                <div>
+                    <i class="fa fa-bell me-3"></i>
+                    <img src="https://via.placeholder.com/40" class="rounded-circle" alt="Profile">
+                </div>
+            </div>
+            <div class="chat-body" id="chatBody">
+                <p class="text-muted text-center">No chat selected.</p>
+            </div>
+            <div class="chat-footer">
+                <input type="text" class="form-control" id="messageInput" placeholder="Type a message...">
+                <button class="btn btn-primary" id="sendMessage"><i class="fa fa-paper-plane"></i></button>
+            </div>
         </div>
     </div>
-</body>
-</html>
 
 <script>
-    document.addEventListener("DOMContentLoaded", getChatUsers);
-</script>
+let refreshInterval;
+
+function openChat(receiverId, receiverName, receiverRole) {
+    let chatWindow = document.getElementById("chatWindow");
+    let chatTitle = document.getElementById("chatTitle");
+    let chatBody = document.getElementById("chatBody");
+    
+    // Set receiver details in chat window
+    chatWindow.setAttribute("data-user-id", receiverId);
+    chatWindow.setAttribute("data-user-role", receiverRole);
+    chatTitle.textContent = receiverName;
+    
+    // Clear chat messages when switching
+    chatBody.innerHTML = "<p class='text-muted text-center'>Loading chat...</p>";
+
+    // Clear any existing interval before starting a new one
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+    }
+
+    // Function to fetch messages
+    
+    function fetchMessages() {
+        fetch(`/chat/fetch_messages/${receiverId}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log("Fetched Messages:", data); // Debugging output
+                chatBody.innerHTML = "";  // Clear loading text
+                if (!data.messages || data.messages.length === 0) {
+                    chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
+                } else {
+                    data.messages.forEach(msg => {
+                        let messageElement = document.createElement("p");
+                        messageElement.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text} 
+                            <span class="text-muted" style="font-size: 0.8em;">${msg.timestamp}</span>`;
+                        chatBody.appendChild(messageElement);
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching messages:", error));
+    }
+
+    // Fetch messages initially and then set interval to refresh every second
+    fetchMessages();
+    refreshInterval = setInterval(fetchMessages, 1000);
+}
+
+
+       document.addEventListener("DOMContentLoaded", function () {
+    let searchInput = document.getElementById("searchUser");
+    let resultsDiv = document.getElementById("searchResults");
+    let chatList = document.getElementById('personalChats');
+
+    // Handle Search Input
+    searchInput.addEventListener('input', function () {
+        let query = this.value.trim();
+
+        if (query.length === 0) {
+            hideSearchResults();
+            return;
+        }
+
+        fetch(`/chat/search_users?q=${query}`)
+            .then(response => response.json())
+            .then(data => {
+                resultsDiv.innerHTML = "";
+                resultsDiv.style.display = "block"; // Show dropdown
+
+                data.forEach(user => {
+                    let item = document.createElement('a');
+                    item.href = "#";
+                    item.classList.add("list-group-item", "list-group-item-action", "search-result-item");
+                    item.innerHTML = `<strong>${user.name}</strong> <span class="text-muted">(${user.role})</span>`;
+                    item.dataset.userId = user.user_id;
+                    item.dataset.userName = user.name;
+                    item.dataset.userRole = user.role;
+
+                    // Handle click selection
+                    item.addEventListener("click", function () {
+                        startPersonalChat(user.user_id, user.name, user.role);
+                        hideSearchResults();
+                    });
+
+                    resultsDiv.appendChild(item);
+                });
+            })
+            .catch(error => console.error("Error searching users:", error));
+    });
+
+    // Handle keyboard navigation
+    searchInput.addEventListener("keydown", function (event) {
+        let activeItem = document.querySelector(".search-result-item.active");
+        let items = [...resultsDiv.getElementsByClassName("search-result-item")];
+
+        if (event.key === "ArrowDown") {
+            event.preventDefault();
+            if (activeItem) {
+                let next = activeItem.nextElementSibling;
+                if (next) {
+                    activeItem.classList.remove("active");
+                    next.classList.add("active");
+                }
+            } else if (items.length > 0) {
+                items[0].classList.add("active");
+            }
+        } 
+        else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            if (activeItem) {
+                let prev = activeItem.previousElementSibling;
+                if (prev) {
+                    activeItem.classList.remove("active");
+                    prev.classList.add("active");
+                }
+            }
+        } 
+        else if (event.key === "Enter") {
+            event.preventDefault();
+            if (activeItem) {
+                activeItem.click();  // Trigger click event for selected item
+            }
+        }
+    });
+
+    //Hide search results when clicking outside
+    document.addEventListener("click", function (event) {
+        if (!searchInput.contains(event.target) && !resultsDiv.contains(event.target)) {
+            hideSearchResults();
+        }
+    });
+
+    function startPersonalChat(receiverId, receiverName, receiverRole) {
+        fetch('/chat/start_chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ receiver_id: receiverId, name: receiverName, role: receiverRole })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            let exists = [...chatList.children].some(li => li.dataset.userId === receiverId);
+
+            if (!exists) {
+                let newChat = document.createElement('li');
+                newChat.classList.add("list-group-item", "bg-transparent", "text-white");
+                newChat.innerHTML = `${receiverName} <span class="text-muted">(${receiverRole})</span>`;
+                newChat.dataset.userId = receiverId;
+                newChat.dataset.userRole = receiverRole;
+                newChat.onclick = function () {
+                    openChat(receiverId, receiverName);
+                };
+                chatList.appendChild(newChat);
+            }
+
+            openChat(receiverId, receiverName);
+            hideSearchResults();
+        })
+        .catch(error => console.error("Error starting chat:", error));
+    }
+
+
+    function loadChatMessages(userId) {
+        fetch(`/chat/fetch_messages?user_id=${userId}`)
+            .then(response => response.json())
+            .then(messages => {
+                let chatBody = document.getElementById('chatBody');
+                chatBody.innerHTML = messages.map(msg =>
+                    `<p><strong>${msg.sender}:</strong> ${msg.text}</p>`
+                ).join('');
+            })
+            .catch(error => console.error("Error loading messages:", error));
+    }
+
+    function hideSearchResults() {
+        resultsDiv.innerHTML = "";
+        resultsDiv.style.display = "none";
+        searchInput.value = "";
+    }
+});
+document.getElementById("sendMessage").addEventListener("click", function () {
+    let messageInput = document.getElementById("messageInput");
+    let messageText = messageInput.value.trim();
+    let chatWindow = document.getElementById('chatWindow');
+    
+    let receiverId = chatWindow.getAttribute('data-user-id');  // Get receiver ID
+    let receiverRole = chatWindow.getAttribute('data-user-role'); // Get receiver role
+
+    if (messageText === "" || !receiverId || !receiverRole) {
+        console.error("Receiver ID and role are required.");
+        return;
+    }
+
+    fetch("/chat/send_message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            receiver_id: receiverId,
+            receiver_role: receiverRole, // Pass receiver role
+            message: messageText
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            let chatBody = document.getElementById('chatBody');
+            let newMessage = document.createElement("p");
+            newMessage.innerHTML = `<strong>You:</strong> ${messageText} 
+                <span class="text-muted" style="font-size: 0.8em;">${data.timestamp}</span>`;
+            chatBody.appendChild(newMessage);
+            messageInput.value = "";
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    })
+    .catch(error => console.error("Error sending message:", error));
+});
+
+    </script>
+
+
+</body>
+</html>

@@ -667,7 +667,7 @@ def delete_item_cart(item_id):
 
     except Exception as e:
         flash(f"Unexpected Error: {str(e)}")
-        return redirect(url_for('ccustomer.customer_dashboard'))
+        return redirect(url_for('customer.customer_dashboard'))
 
 
 
