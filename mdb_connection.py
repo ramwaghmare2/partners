@@ -1,8 +1,11 @@
 from pymongo import MongoClient
 
+# MongoDB Connection
 client = MongoClient("mongodb://localhost:27017/")
-db_mongo = client.chat_db
+mongo_db = client["chat_db"]  # Change this to your actual database name
 
-messages_collection = db_mongo.chat_messages
-groups_collection = db_mongo.chat_groups
-global_chat_collection = db_mongo.global_chat
+# Collections
+personal_chat_collection = mongo_db["personal_chats"]
+group_chat_collection = mongo_db["group_chats"]
+channel_collection = mongo_db["channels"]
+messages_collection = mongo_db["messages"]
