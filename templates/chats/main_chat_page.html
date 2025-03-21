@@ -71,24 +71,31 @@ function openChat(receiverId, receiverName, receiverRole) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
-    
-    // Set receiver details in chat window
+
+    // Debugging: Log the values
+    console.log('Receiver ID:', receiverId);
+    console.log('Receiver Name:', receiverName);
+    console.log('Receiver Role:', receiverRole);
+
+    // Set receiver details in the chat window
     chatWindow.setAttribute("data-user-id", receiverId);
     chatWindow.setAttribute("data-user-role", receiverRole);
-    chatTitle.textContent = receiverName;
+    chatTitle.textContent = receiverName;  // Set the name in the title
+
+    // Debugging: Check if the title is updating correctly
+    console.log('Chat Title:', chatTitle.textContent);
     
     // Clear chat messages when switching
     chatBody.innerHTML = "<p class='text-muted text-center'>Loading chat...</p>";
 
     // Clear any existing interval before starting a new one
-    if (refreshInterval) {
-        clearInterval(refreshInterval);
+    if (window.refreshInterval) {
+        clearInterval(window.refreshInterval);
     }
 
     // Function to fetch messages
-    
     function fetchMessages() {
-        fetch(`/chat/fetch_messages/${receiverId}`)
+        fetch(`/chat/fetch_messages?id=${receiverId}&role=${receiverRole}`)  // Pass receiverRole in the query string
             .then(response => response.json())
             .then(data => {
                 console.log("Fetched Messages:", data); // Debugging output
@@ -98,7 +105,7 @@ function openChat(receiverId, receiverName, receiverRole) {
                 } else {
                     data.messages.forEach(msg => {
                         let messageElement = document.createElement("p");
-                        messageElement.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text} 
+                        messageElement.innerHTML = `${msg.text} 
                             <span class="text-muted" style="font-size: 0.8em;">${msg.timestamp}</span>`;
                         chatBody.appendChild(messageElement);
                     });
@@ -109,8 +116,9 @@ function openChat(receiverId, receiverName, receiverRole) {
 
     // Fetch messages initially and then set interval to refresh every second
     fetchMessages();
-    refreshInterval = setInterval(fetchMessages, 1000);
+    window.refreshInterval = setInterval(fetchMessages, 1000);
 }
+
 
 
        document.addEventListener("DOMContentLoaded", function () {
@@ -230,18 +238,6 @@ function openChat(receiverId, receiverName, receiverRole) {
     }
 
 
-    function loadChatMessages(userId) {
-        fetch(`/chat/fetch_messages?user_id=${userId}`)
-            .then(response => response.json())
-            .then(messages => {
-                let chatBody = document.getElementById('chatBody');
-                chatBody.innerHTML = messages.map(msg =>
-                    `<p><strong>${msg.sender}:</strong> ${msg.text}</p>`
-                ).join('');
-            })
-            .catch(error => console.error("Error loading messages:", error));
-    }
-
     function hideSearchResults() {
         resultsDiv.innerHTML = "";
         resultsDiv.style.display = "none";
@@ -275,7 +271,7 @@ document.getElementById("sendMessage").addEventListener("click", function () {
         if (data.message) {
             let chatBody = document.getElementById('chatBody');
             let newMessage = document.createElement("p");
-            newMessage.innerHTML = `<strong>You:</strong> ${messageText} 
+            newMessage.innerHTML = `x${messageText} 
                 <span class="text-muted" style="font-size: 0.8em;">${data.timestamp}</span>`;
             chatBody.appendChild(newMessage);
             messageInput.value = "";
