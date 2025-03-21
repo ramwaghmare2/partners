@@ -1,0 +1,221 @@
+
+    .pos-container {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    max-width: 100%; /* Ensure it doesn't exceed the container width */
+}
+
+    h1 {
+        margin-bottom: 20px;
+    }
+
+    .product-entry {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        width: 80%;
+    }
+
+    .product-entry input {
+        width: 30%;
+        padding: 8px;
+        margin: 5px;
+    }
+
+    button {
+        padding: 2px 10px;
+        background-color: #cf0202;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background-color: #850413;
+    }
+
+    table {
+    width: 100%; /* Make sure the table fills the container width */
+    margin-top: 20px;
+    border-collapse: collapse;
+    table-layout: fixed; /* Ensure the table cells have a fixed width */
+    word-wrap: break-word; /* Break long words inside table cells */
+}
+
+table th, table td {
+    padding: px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+    .total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .total h2 {
+        margin: 0;
+    }
+
+    .order-button {
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+    }
+
+    .order-button:hover {
+        background-color: #45a049;
+    }
+
+    .menu {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+    justify-items: center;
+    padding: 10px; /* Added padding for better spacing */
+    box-sizing: border-box; /* Ensures padding doesn't affect the layout */
+}
+
+.menu-item {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    max-width: 180px; /* Adjusted max-width for smaller item size */
+    transition: transform 0.2s;
+    box-sizing: border-box; /* Ensures padding does not overflow */
+}
+
+.menu-item img {
+    width: 100px;
+    height: 100px; /* Keeps image size proportional */
+    max-width: 150px; /* Limits the image size to fit better */
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.menu-item h3 {
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+.menu-item p {
+    font-size: 14px;
+}
+
+/* Ensure the items stay inside the container and prevent overflow */
+#layoutSidenav_content {
+    overflow: hidden;
+}
+
+
+    .add-to-cart {
+        padding: 2px 15px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: inline-block;
+        width: auto;
+    }
+
+    .add-to-cart:hover {
+        background-color: #45a049;
+    }
+
+    .payment-option {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.payment-option:hover {
+    background-color: #f1f1f1;
+}
+
+.payment-option.selected {
+    background-color: #4CAF50;  /* Highlight color for selected option */
+    color: white;               /* Change text color to white */
+    font-weight: bold;          /* Optionally make the text bold */
+    border: 2px solid #45a049; /* Add border to selected option for clearer distinction */
+}
+
+.payment-option {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    overflow: hidden;
+    font-weight: bold; /* Makes the text bold */
+    transition: all 0.3s ease;
+    position: relative; /* Needed for absolute positioning of underline */
+}
+
+.payment-option:hover::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0px;
+    width: 0;
+    height: 3px; /* Make underline bolder */
+    background-color: green;
+    animation: underlineExpand 0.3s forwards;
+}
+
+@keyframes underlineExpand {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+    #product-list-container {
+    overflow-x: auto; /* Enables horizontal scrolling */
+    max-width: 100%; /* Ensures the container fits within its parent */
+}
+
+#search-bar {
+    width: 100%;
+    padding: 8px 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+}
+.payment-row {
+    display: flex;
+    justify-content: center;
+    gap: 15px; /* Adjust gap as needed */
+}
+.quantity-btn{
+    background-color: #ffffff;
+    color: #000000;
+}
+.quantity-btn:hover {
+        background-color: #ffffff;
+    }
+    h3 {
+    text-decoration: underline;
+    text-decoration-thickness: 2px; /* Adjust thickness */
+    text-underline-offset: 4px; /* Adjust spacing from text */
+}
