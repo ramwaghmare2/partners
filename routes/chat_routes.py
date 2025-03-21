@@ -11,12 +11,16 @@ from utils.services import ROLE_MODEL_MAP
 
 # Initialize Blueprint
 chat_bp = Blueprint('chat_bp', __name__, static_folder='../static', template_folder='../templates/chats')
+
+
+
 @chat_bp.route('/landing', methods=['GET'])
 def get_landing_page():
     try:
         # Get user ID and role from session
         user_id = session.get("user_id")
         user_role = session.get("role")
+        print(user_role)
 
         if not user_id or not user_role:
             return "Unauthorized: User not logged in", 401
@@ -33,92 +37,98 @@ def get_landing_page():
         user_model = role_model_map.get(user_role.lower())  # Fetch the correct model
         user = user_model.query.get(user_id) if user_model else None
 
+        # Fetch all users from all roles
+        all_users = []
+        for role, model in role_model_map.items():
+            users = model.query.all()
+            for u in users:
+                all_users.append({
+                    "id": u.id,  # Assuming `id` is the primary key
+                    "name": u.name,  # Assuming `name` field exists
+                    "role": role,
+                    "contact":u.contact,
+                    "email":u.email
+                })
+
+        #print(all_users)
+
         if not user:
             return "User not found", 404
 
-        user_mobile = user.contact  # Fetch mobile number
-
         # Fetch chats where the logged-in user is the sender
-        sender_chats = list(personal_chat_collection.find({"sender_contact": user_mobile}))        
+        sender_chats = list(personal_chat_collection.find({
+            "sender_id": user_id,
+            "sender_role": {"$regex": f"^{user_role}$", "$options": "i"} 
+        }))
 
         # Fetch chats where the logged-in user is the receiver
-        receiver_chats = list(personal_chat_collection.find({"receiver_contact": user_mobile}))
-        #send_by_sender = [mesg for mesg in receiver_chats[0]["messages"] if user_mobile == mesg["sender_contact"] ]
+        receiver_chats = list(personal_chat_collection.find({
+            "receiver_id": str(user_id),  # Convert user_id to string for matching
+            "receiver_role": {"$regex": f"^{user_role}$", "$options": "i"}
+        }))
 
-        #print('sender',send_by_sender)
-        # print(sender_chats, "sender_chats")  # Debugging output
-        # print(receiver_chats, "receiver_chats")  # Debugging output
-
+        #print(sender_chats, "sender_chats")  # Debugging output
+        #print(receiver_chats, "receiver_chats")  # Debugging output
+        
         personal_chat_data = []
 
         # Process sender chats
         for chat in sender_chats:
-            receiver_mobile = chat["receiver_contact"]
             receiver_id = str(chat["receiver_id"])
             receiver_role = chat.get("receiver_role", "Unknown")
 
-            # Fetch receiver's details using mobile number
-            receiver = None
-            for model in role_model_map.values():
-                receiver = model.query.filter_by(contact=receiver_mobile).first()
-                if receiver:
-                    break  # Stop if user found
-
+            # Fetch receiver's details from MySQL
+            receiver_model = role_model_map.get(receiver_role.lower()) if receiver_role else None
+            receiver = receiver_model.query.get(int(receiver_id)) if receiver_model and receiver_id.isdigit() else None
             receiver_name = receiver.name if receiver else "Unknown"
 
             # Prepare chat data
-            last_message = chat.get("messages", [])[-1] if chat.get("messages") else {}
-
+            last_message = chat["messages"][-1] if chat.get("messages") else {}
             personal_chat_data.append({
                 "chat_id": str(chat["_id"]),
                 "chat_type": "sent",  # Mark as sent chat
                 "receiver_id": receiver_id,
-                "receiver_role": receiver_role,
-                "receiver_contact": receiver_mobile,
                 "receiver_name": receiver_name,
+                "receiver_role": receiver_role,
                 "last_message": last_message.get("text", ""),
                 "timestamp": last_message.get("timestamp", None)
             })
 
         # Process receiver chats
         for chat in receiver_chats:
-            sender_mobile = chat["sender_contact"]
             sender_id = str(chat["sender_id"])
             sender_role = chat.get("sender_role", "Unknown")
 
-            # Fetch sender details using mobile number
-            sender = None
-            for model in role_model_map.values():
-                sender = model.query.filter_by(contact=sender_mobile).first()
-                if sender:
-                    break  # Stop if user found
-
+            # Fetch sender details from MySQL
+            sender_model = role_model_map.get(sender_role.lower()) if sender_role else None
+            sender = sender_model.query.get(int(sender_id)) if sender_model and sender_id.isdigit() else None
             sender_name = sender.name if sender else "Unknown"
 
             # Prepare chat data
-            last_message = chat.get("messages", [])[-1] if chat.get("messages") else {}
+            last_message = chat["messages"][-1] if chat.get("messages") else {}
+            timestamp = last_message.get("timestamp", None)
 
             personal_chat_data.append({
                 "chat_id": str(chat["_id"]),
                 "chat_type": "received",  # Mark as received chat
-                "receiver_id": sender_id,
+                "receiver_id": sender_id,  # Should be sender_id, not receiver_id
+                "receiver_name": sender_name,  # Should be sender_name, not receiver_name
                 "receiver_role": sender_role,
-                "receiver_contact": sender.contact,
-                "receiver_name": sender.name,
                 "last_message": last_message.get("text", ""),
-                "timestamp": last_message.get("timestamp", None)
+                "timestamp": timestamp if timestamp is not None else 0  # Handle None timestamps
             })
-        print(personal_chat_data)
 
         return render_template(
             "chats/main_chat_page.html",
             user=user,
-            personal_chats=personal_chat_data
+            personal_chats=personal_chat_data,
+            all_users=all_users
         )
 
     except Exception as e:
         print("Error:", e)  # Debugging output
-        return str(e), 500
+        return str(e), 500  
+   
 
 
 @chat_bp.route('/search_users', methods=['GET'])
@@ -272,7 +282,6 @@ def send_message():
                 {"sender_contact": receiver.contact, "receiver_contact": sender.contact}
             ]
         })
-        print(existing_chat)
 
         timestamp = datetime.now(pytz.timezone('Asia/Kolkata'))  # Current timestamp in seconds
 
@@ -356,3 +365,76 @@ def fetch_messages():
         print("Error:", e)  # Debugging output
         return jsonify({"error": str(e)}), 500
 
+
+@chat_bp.route('/create_group', methods=['POST'])
+def create_group():
+    try:
+        data = request.get_json()
+        group_name = data.get("name")
+        description = data.get("description")
+        members = data.get("members")  # List of {"id": user_id, "role": user_role}
+        print (members)
+        sender_id = session.get("user_id")
+        sender_role = session.get("role")
+
+        if not sender_id or not sender_role:
+            return jsonify({"error": "Unauthorized"}), 401
+
+        if not group_name or not members:
+            return jsonify({"error": "Group name and at least one member are required"}), 400
+
+        sender_model = ROLE_MODEL_MAP.get(sender_role)
+        sender = sender_model.query.filter_by(id=sender_id).first()
+
+        if not sender:
+            return jsonify({"error": "Sender not found"}), 404
+
+        # Get sender's contact info
+        sender_contact = sender.contact
+
+        # Retrieve receiver contact details
+        member_contacts = []
+        for member in members:
+            member_model = ROLE_MODEL_MAP.get(member["role"])
+            user = member_model.query.filter_by(id=member["id"]).first()
+            if user:
+                member_contacts.append({
+                    "id": member["id"],
+                    "role": member["role"],
+                    "contact": user.contact
+                })
+
+        # Check if a group with the same members already exists
+        existing_group = group_chat_collection.find_one({
+            "members": {"$all": member_contacts}
+        })
+
+        if existing_group:
+            return jsonify({
+                "group_id": str(existing_group["_id"]),
+                "name": existing_group["name"],
+                "description": existing_group["description"],
+                "members": existing_group["members"]
+            })
+
+        # Create new group
+        new_group = {
+            "name": group_name,
+            "description": description,
+            "created_by": {"id": sender_id, "role": sender_role, "contact": sender_contact},
+            "members": member_contacts,
+            "messages": [],
+            "created_at": datetime.utcnow()
+        }
+
+        group_id = group_chat_collection.insert_one(new_group).inserted_id
+
+        return jsonify({
+            "group_id": str(group_id),
+            "name": group_name,
+            "description": description,
+            "members": member_contacts
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
