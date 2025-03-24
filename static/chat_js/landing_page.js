@@ -1,52 +1,77 @@
+let refreshInterval;
 
-let socket = io("http://localhost:5000"); // Connect to Socket.IO server
-
-function openChat(receiverId, receiverName, receiverRole) {
+function openChat(receiverId, receiverName, receiverRole = null) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
+    let chatFooter = document.querySelector(".chat-footer");
 
-    console.log("Opening chat with:", receiverId, receiverName, receiverRole);
+    // Debugging logs
+    console.log('Receiver ID:', receiverId);
+    console.log('Receiver Name:', receiverName);
+    console.log('Receiver Role:', receiverRole || 'Group Chat');
 
     // Set receiver details in the chat window
     chatWindow.setAttribute("data-user-id", receiverId);
-    chatWindow.setAttribute("data-user-role", receiverRole);
-    chatTitle.textContent = receiverName; // Set chat title
+    chatWindow.setAttribute("data-user-role", receiverRole || "group");
+    chatTitle.textContent = receiverName;  // Set the chat title
 
-    // Clear chat messages when switching
+    // Show chat input area
+    chatFooter.style.display = "flex";
+
+    // Clear previous chat messages
     chatBody.innerHTML = "<p class='text-muted text-center'>Loading chat...</p>";
 
-    // Emit a request to fetch messages via Socket.IO
-    socket.emit("fetch_messages", { id: receiverId, role: receiverRole });
+    // Clear any existing interval before starting a new one
+    if (window.refreshInterval) {
+        clearInterval(window.refreshInterval);
+    }
 
-    // Listen for the messages response
-    socket.on("fetch_messages_response", (data) => {
-        console.log("Received messages:", data); // Debugging output
+    // Function to fetch messages
+    function fetchMessages() {
+        let fetchUrl = receiverRole 
+            ? `/chat/fetch_messages?id=${receiverId}&role=${receiverRole}`  // Individual chat
+            : `/chat/fetch_group_messages?group_id=${receiverId}`;  // Group chat
 
-        chatBody.innerHTML = ""; // Clear loading text
+        fetch(fetchUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Fetched Messages:", data); // Debugging output
+                chatBody.innerHTML = "";  // Clear loading text
 
-        if (!data.messages || data.messages.length === 0) {
-            chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
-        } else {
-            data.messages.forEach((msg) => {
-                let messageElement = document.createElement("p");
-                messageElement.innerHTML = `${msg.text} 
-                    <span class="text-muted" style="font-size: 0.8em;">${msg.timestamp}</span>`;
-                chatBody.appendChild(messageElement);
-            });
-        }
-    });
+                if (!data.messages || data.messages.length === 0) {
+                    chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
+                } else {
+                    data.messages.forEach(msg => {
+                        let messageElement = document.createElement("div");
+                        messageElement.classList.add("chat-message");
 
-    // Listen for errors
-    socket.on("fetch_error", (error) => {
-        console.error("Error fetching messages:", error);
-        chatBody.innerHTML = `<p class='text-danger text-center'>${error.error}</p>`;
-    });
+                        // Format the message
+                        messageElement.innerHTML = `
+                            <div class="message-user">${msg.sender_name}</div>
+                            <div class="message-text">${msg.text}</div>
+                            <div class="text-muted message-time" style="font-size: 0.8em;">${msg.timestamp}</div>
+                        `;
 
-    // Join a specific chat room based on receiver ID
-    socket.emit("join_room", { id: receiverId, role: receiverRole });
+                        chatBody.appendChild(messageElement);
+                    });
+
+                    // Auto-scroll to the latest message
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }
+            })
+            .catch(error => console.error("Error fetching messages:", error));
+    }
+
+    // Fetch messages initially and refresh every second
+    fetchMessages();
+    window.refreshInterval = setInterval(fetchMessages, 1000);
 }
-
 
 
        document.addEventListener("DOMContentLoaded", function () {
