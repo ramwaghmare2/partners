@@ -34,9 +34,9 @@ def get_landing_page():
             "kitchen": Kitchen
         }
 
-        user_model = role_model_map.get(user_role.lower())  # Fetch the correct model
+        user_model = ROLE_MODEL_MAP.get(user_role)  # Fetch the correct model
         user = user_model.query.get(user_id) if user_model else None
-
+        print
         all_users = []
         for role, model in role_model_map.items():
             users = model.query.all()
@@ -131,13 +131,13 @@ def get_landing_page():
         user_groups = list(group_chat_collection.find({
             "members": {
                 "$elemMatch": {
-                    "id": user_id,
+                    "id": str(user_id),
                     "role": user_role,
                     "contact": user_mobile
                 }
             }
         }))
-
+        print(f'user_groups {user_groups}')
         group_chat_data = []
         for group in user_groups:
             group_chat_data.append({
@@ -267,6 +267,7 @@ def start_chat():
 def send_message():
     try:
         data = request.get_json()
+        print(f'data {data}')
         receiver_id = str(data.get("receiver_id"))  # Can be a user ID or group ID
         receiver_role = data.get("receiver_role")  # Null for group messages
         message_text = data.get("message")
@@ -403,8 +404,8 @@ def create_group():
         # Retrieve receiver contact details
         member_contacts = []
         for member in members:
-            member["role"] = member["role"].capitalize()  # Capitalize role first letter
-
+            member["role"] = member["role"].replace("_", " ").title().replace(" ", "")  # Capitalize role first letter
+            print(member["role"])
             if member["id"] == sender_id and member["role"] == sender_role:
                 # Skip adding the sender if they are already listed
                 continue  
