@@ -9,7 +9,7 @@
      <!-- Link JavaScript file -->
     <script src="{{ url_for('static', filename='chat_js/landing_page.js') }}"></script>
     <script src="{{ url_for('static', filename='chat_js/group_chat.js') }}"></script>
-
+    <script src="{{ url_for('static', filename='chat_js/fetch_msg.js') }}"></script>
     <style>
         body { background-color: #f8f9fa; }
         .chat-container { display: flex; height: 100vh; }
@@ -18,10 +18,13 @@
         .chat-header { background: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .chat-search { padding: 10px; background: #e9ecef; }
         .chat-body { flex-grow: 1; padding: 15px; overflow-y: auto; }
-        .chat-footer { padding: 10px; background: #f1f1f1; display: flex; }
+        .chat-footer { padding: 10px; background: #f1f1f1; }
         .chat-footer input { flex-grow: 1; margin-right: 10px; }
         .list-group-item { cursor: pointer; }
         .list-group-item:hover { background: rgba(255, 255, 255, 0.2); }
+        .chat-footer {
+            display:none;
+        }
     </style>
 </head>
 <body>
@@ -37,7 +40,7 @@
             <h6 class="mt-3">Personal Chats</h6>
             <ul class="list-group" id="personalChats">
                 {% for chat in personal_chats %}
-                <li class="list-group-item bg-transparent text-white" onclick="openChat('{{ chat.receiver_id }}', '{{ chat.receiver_name }}', '{{ chat.receiver_role }}')">
+                <li class="list-group-item bg-transparent text-white" onclick="openPersonalChat('{{ chat.receiver_id }}', '{{ chat.receiver_name }}', '{{ chat.receiver_role }}')">
 
                         {{ chat.receiver_name }}
                     </li>
@@ -45,9 +48,9 @@
             </ul>
             {% if group_chats %}
             <h6 class="mt-3">Group Chats</h6>
-            <ul class="list-group" id="personalChats">
+            <ul class="list-group" id="groupChats">
                 {% for chat in group_chats %}
-                <li class="list-group-item bg-transparent text-white" onclick="openChat('{{ chat.receiver_id }}', '{{ chat.receiver_name }}', '{{ chat.receiver_role }}')">
+                <li class="list-group-item bg-transparent text-white" onclick="openGroupChat('{{ chat.group_id }}', '{{ chat.receiver_name }}')">
 
                         {{ chat.receiver_name }}
                     </li>
@@ -146,42 +149,106 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    
-    document.getElementById("sendMessage").addEventListener("click", function () {
+// Handle Group Chat Selection
+document.querySelectorAll('.group-chat').forEach(group => {
+    group.addEventListener('click', function () {
+        let chatWindow = document.getElementById("chatWindow");
+        chatWindow.setAttribute("data-group-id", this.getAttribute('data-group-id')); // Set Group ID
+        chatWindow.removeAttribute("data-user-id"); // Remove personal chat ID
+        chatWindow.removeAttribute("data-user-role"); // Remove user role (not needed in group chat)
+
+        console.log("Group Chat Selected");
+        console.log("Group ID:", this.getAttribute('data-group-id'));
+    });
+});
+
+// Handle Personal Chat Selection
+document.querySelectorAll('.personal-chat').forEach(user => {
+    user.addEventListener('click', function () {
+        let chatWindow = document.getElementById('chatWindow');
+        chatWindow.setAttribute('data-user-id', this.getAttribute('data-user-id')); // Set user ID
+        chatWindow.setAttribute('data-user-role', this.getAttribute('data-user-role')); // Set user role
+        chatWindow.removeAttribute("data-group-id"); // Remove group ID (not needed in personal chat)
+
+        console.log("Personal Chat Selected");
+        console.log("Receiver ID:", this.getAttribute('data-user-id'));
+        console.log("Receiver Role:", this.getAttribute('data-user-role'));
+    });
+});
+
+// Handle Sending Messages
+document.getElementById("sendMessage").addEventListener("click", function () {
     let messageInput = document.getElementById("messageInput");
     let messageText = messageInput.value.trim();
-    let chatWindow = document.getElementById('chatWindow');
-    
-    let receiverId = chatWindow.getAttribute('data-user-id');  // Get receiver ID
-    let receiverRole = chatWindow.getAttribute('data-user-role'); // Get receiver role
+    let chatWindow = document.getElementById("chatWindow");
 
-    if (messageText === "" || !receiverId || !receiverRole) {
-        console.error("Receiver ID and role are required.");
+    let groupId = chatWindow.getAttribute("data-group-id");  // Group chat ID
+    let receiverId = chatWindow.getAttribute("data-user-id");  // Personal chat ID
+    let receiverRole = chatWindow.getAttribute("data-user-role"); // Receiver Role (for personal chat)
+
+    console.log("Selected Group ID:", groupId);
+    console.log("Selected Receiver ID:", receiverId);
+    console.log("Message Text:", messageText);
+
+    if (!messageText) {
+        alert("Please enter a message before sending.");
         return;
     }
+
+    if (!groupId && !receiverId) {
+        alert("No chat selected.");
+        return;
+    }
+
+    // Prepare request payload
+    let requestData = { message: messageText };
+
+    if (groupId) {
+    requestData.receiver_id = groupId; // Use receiver_id for group
+    requestData.receiver_role = null; // Ensure role is null for group chats
+    } else if (receiverId) {
+        requestData.receiver_id = receiverId; // Personal chat
+        if (receiverRole) {
+            requestData.receiver_role = receiverRole;
+        }
+    }
+
+    console.log("Sending message:", requestData);
 
     fetch("/chat/send_message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            receiver_id: receiverId,
-            receiver_role: receiverRole, // Pass receiver role
-            message: messageText
-        })
+        body: JSON.stringify(requestData)
     })
     .then(response => response.json())
     .then(data => {
+        console.log("Server Response:", data);
+
+        if (data.error) {
+            console.error("Error from server:", data.error);
+            alert("Error sending message: " + data.error);
+            return;
+        }
+
         if (data.message) {
-            let chatBody = document.getElementById('chatBody');
-            let newMessage = document.createElement("p");
-            newMessage.innerHTML = `x${messageText} 
-                <span class="text-muted" style="font-size: 0.8em;">${data.timestamp}</span>`;
+            let chatBody = document.getElementById("chatBody");
+            let newMessage = document.createElement("div");
+            newMessage.classList.add("chat-message");
+            newMessage.innerHTML = `
+                <div class="message-user">You</div>
+                <div class="message-text">${messageText}</div>
+                <div class="text-muted message-time" style="font-size: 0.8em;">${data.timestamp}</div>
+            `;
+
             chatBody.appendChild(newMessage);
-            messageInput.value = "";
             chatBody.scrollTop = chatBody.scrollHeight;
+            messageInput.value = "";
         }
     })
-    .catch(error => console.error("Error sending message:", error));
+    .catch(error => {
+        console.error("Error sending message:", error);
+        alert("Failed to send message. Please try again.");
+    });
 });
 
 
