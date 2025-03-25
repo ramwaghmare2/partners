@@ -500,6 +500,27 @@ def update_group_name():
         return jsonify({'error': 'An unexpected error occurred. Please try again later.'}), 500
 
 
+@chat_bp.route('/get_group_details', methods=['GET'])
+def get_group_details():
+    group_id = request.args.get('group_id')
+    
+    # Validate group_id format (ObjectId)
+    if not ObjectId.is_valid(group_id):
+        return jsonify({"error": "Invalid group ID format"}), 400
+
+    # Find the group by ID
+    group = group_chat_collection.find_one({"_id": ObjectId(group_id)})
+    
+    if group:
+        # Return relevant data
+        return jsonify({
+            "name": group.get("name"),
+            "description": group.get("description"),
+            "members": [{"id": member["id"], "role": member["role"], "contact": member["contact"]} for member in group.get("members", [])]
+        })
+    else:
+        return jsonify({"error": "Group not found"}), 404
+
 
 @chat_bp.route('/fetch_group_messages', methods=['GET'])
 def fetch_group_messages():
