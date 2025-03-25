@@ -17,11 +17,8 @@ __pycache__/
 
 # Pos bill path file
 /pos_bill_path/
-<<<<<<< Updated upstream
 
 # Ignoreing Encryption key txt
 /encryption_key.txt/
 /key_gen.py/
 /static/js/chat_js/cs_webrtc.txt/
-=======
->>>>>>> Stashed changes
