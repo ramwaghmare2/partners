@@ -1,14 +1,16 @@
-function openPersonalChat(receiverId, receiverName, receiverRole) {
+function openPersonalChat(receiverId, receiverName, receiverRole, receiverContact) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
     let chatFooter = document.querySelector(".chat-footer");
 
-    console.log("Opening personal chat with:", receiverName);
+    console.log("Opening personal chat with:", receiverName, "Contact:", receiverContact);
 
     chatWindow.setAttribute("data-user-id", receiverId);
     chatWindow.setAttribute("data-user-role", receiverRole);
-    chatTitle.textContent = receiverName;
+    chatWindow.setAttribute("data-user-contact", receiverContact);  // Store the contact in the chat window
+
+    chatTitle.textContent = `${receiverName} (${receiverContact})`; // Display contact in the chat title
     chatFooter.style.display = "flex";
 
     chatBody.innerHTML = "<p class='text-muted text-center'>Loading chat...</p>";
@@ -92,4 +94,57 @@ function openGroupChat(groupId, groupName) {
 
     fetchGroupMessages();
     window.refreshInterval = setInterval(fetchGroupMessages, 1000);
+}
+
+
+
+function openEditGroupModal() {
+    let chatWindow = document.getElementById("chatWindow");
+    let groupId = chatWindow.getAttribute("data-group-id");
+    let groupName = document.getElementById("chatTitle").textContent;
+
+    if (!groupId) {
+        alert("No group selected!");
+        return;
+    }
+
+    document.getElementById("groupId").value = groupId;
+    document.getElementById("groupName").value = groupName;
+    
+    // Fetch existing group data
+    fetch(`/chat/get_group_details?group_id=${groupId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById("groupDescription").value = data.description || "";
+            document.getElementById("groupParticipants").value = data.participants.join(", ");
+        })
+        .catch(error => console.error("Error fetching group details:", error));
+
+    let modal = new bootstrap.Modal(document.getElementById("editGroupModal"));
+    modal.show();
+}
+
+function saveGroupChanges() {
+    let groupId = document.getElementById("groupId").value;
+    let groupName = document.getElementById("groupName").value;
+    let groupDescription = document.getElementById("groupDescription").value;
+    let participants = document.getElementById("groupParticipants").value.split(",").map(p => p.trim());
+
+    fetch(`/chat/update_group`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ group_id: groupId, name: groupName, description: groupDescription, participants })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert("Group updated successfully!");
+            document.getElementById("chatTitle").textContent = groupName;
+            let modal = bootstrap.Modal.getInstance(document.getElementById("editGroupModal"));
+            modal.hide();
+        } else {
+            alert("Error updating group: " + data.error);
+        }
+    })
+    .catch(error => console.error("Error updating group:", error));
 }
