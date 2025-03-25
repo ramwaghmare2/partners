@@ -59,7 +59,7 @@ function openGroupChat(groupId, groupName) {
     console.log("Opening group chat:", groupName);
 
     chatWindow.setAttribute("data-group-id", groupId);
-    chatTitle.textContent = groupName;
+    chatTitle.textContent = `${groupName} (${groupId})`;
     chatFooter.style.display = "flex";
 
     chatBody.innerHTML = "<p class='text-muted text-center'>Loading chat...</p>";
@@ -108,18 +108,26 @@ function openEditGroupModal() {
         return;
     }
 
+    // Set the groupId and groupName in the form
     document.getElementById("groupId").value = groupId;
     document.getElementById("groupName").value = groupName;
-    
+
     // Fetch existing group data
     fetch(`/chat/get_group_details?group_id=${groupId}`)
         .then(response => response.json())
         .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+            // Populate modal fields with group data
+            document.getElementById("groupName").value = data.name;
             document.getElementById("groupDescription").value = data.description || "";
-            document.getElementById("groupParticipants").value = data.participants.join(", ");
+            document.getElementById("groupParticipants").value = data.members.map(member => `${member.id} (${member.role})`).join(", ");
         })
         .catch(error => console.error("Error fetching group details:", error));
 
+    // Show the modal
     let modal = new bootstrap.Modal(document.getElementById("editGroupModal"));
     modal.show();
 }

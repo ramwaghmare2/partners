@@ -1,1 +1,1 @@
-BILL_SAVE_PATH = r"C:\Users\Admin\Desktop\OpenFuture\order_bills"
+BILL_SAVE_PATH = r"C:\Users\tiwar\Desktop\OpenFuture\order_bills"
