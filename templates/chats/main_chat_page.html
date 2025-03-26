@@ -17,6 +17,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='chat_css/chat.css') }}">
 
 </head>
+<style>
+    .card {
+    border-radius: 10px;
+    transition: 0.3s;
+}
+.card:hover {
+    transform: scale(1.05);
+}
+
+</style>
 <body>
     <div class="chat-container">
         <!-- Left Sidebar -->
@@ -239,34 +249,45 @@
 
 <!-- Group Edit Modal -->
 <div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content" style="height: 80vh;">
             <div class="modal-header">
                 <h5 class="modal-title" id="editGroupModalLabel">Edit Group</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body" style="overflow-y: auto; max-height: calc(100% - 60px - 56px);">
                 <form id="editGroupForm">
                     <input type="hidden" id="groupId" name="group_id">
 
                     <!-- Group Name -->
                     <div class="mb-3">
-                        <label for="groupName" class="form-label">Group Name</label>
-                        <input type="text" class="form-control" id="groupName" name="group_name" readonly>
+                        <label for="groupNamemodel" class="form-label">Group Name</label>
+                        <input type="text" class="form-control" id="groupNamemodel" name="group_name">
                     </div>
 
                     <!-- Group Description -->
                     <div class="mb-3">
-                        <label for="groupDescription" class="form-label">Group Description</label>
-                        <textarea class="form-control" id="groupDescription" name="group_description" rows="3"></textarea>
+                        <label for="groupDescriptionmodel" class="form-label">Group Description</label>
+                        <textarea class="form-control" id="groupDescriptionmodel" name="group_description" rows="3"></textarea>
                     </div>
 
-                    <!-- Add Participants -->
+                    <!-- Participants Grid -->
                     <div class="mb-3">
-                        <label for="groupParticipants" class="form-label">Participants</label>
-                        <input type="text" class="form-control" id="groupParticipants" name="participants" readonly>
+                        <label for="groupParticipantsContainer" class="form-label">Participants</label>
+                        <div class="container">
+                            <div class="row" id="groupParticipantsContainer"></div> <!-- Members will be added here -->
+                        </div>
                     </div>
-                    
+
+                    <!-- Add Members Button -->
+                    <button type="button" class="btn btn-primary mt-2" onclick="showAddMembers()">Add Members +</button>
+
+                    <!-- Add Members Section -->
+                    <div id="addMembersSection" style="display: none;">
+                        <label class="form-label"></label>
+                        <div id="availableUsersContainer"></div> <!-- Users will be displayed here -->
+                    </div>
+
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" onclick="saveGroupChanges()">Save Changes</button>
@@ -384,6 +405,201 @@ document.getElementById("sendMessage").addEventListener("click", function () {
         alert("Failed to send message. Please try again.");
     });
 });
+</script>
+<script>
+  let newParticipants = []; // Store newly added users
+let removedParticipants = []; // Store removed users
+
+function openEditGroupModal() {
+    let chatWindow = document.getElementById("chatWindow");
+    let groupId = chatWindow.getAttribute("data-group-id");
+    let groupName = document.getElementById("chatTitle").textContent;
+
+    if (!groupId) {
+        alert("No group selected!");
+        return;
+    }
+
+    document.getElementById("groupId").value = groupId;
+    document.getElementById("groupNamemodel").value = groupName;
+
+    fetch(`/chat/get_group_details?group_id=${groupId}`)
+        .then(response => response.json())
+        .then(data => {
+            console.log("Fetched Group Data:", data);
+
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            document.getElementById("groupNamemodel").value = data.name || "No Name";
+            document.getElementById("groupDescriptionmodel").value = data.description || "";
+
+            let participantsContainer = document.getElementById("groupParticipantsContainer");
+            participantsContainer.innerHTML = ""; 
+
+            data.members.forEach(member => {
+                let participantDiv = document.createElement("div");
+                participantDiv.classList.add("col-md-4", "mb-2", "d-flex", "align-items-center");
+                participantDiv.setAttribute("data-member-id", member.id);
+
+                participantDiv.innerHTML = `
+                    <div class="p-2 border rounded d-flex justify-content-between w-100">
+                        <div>
+                            <span>${member.name}</span>  
+                            <div class="text-muted">${member.role}</div>  
+                        </div>
+                        <button class="btn btn-danger btn-sm" style="height: 30px; margin-top: 8px;" 
+                                onclick="removeExistingMember('${member.id}')">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                `;
+                participantsContainer.appendChild(participantDiv);
+            });
+        })
+        .catch(error => console.error("Error fetching group details:", error));
+
+    let modal = new bootstrap.Modal(document.getElementById("editGroupModal"));
+    modal.show();
+}
+
+
+function showAddMembers() {
+    let groupId = document.getElementById("groupId").value;
+    if (!groupId) {
+        alert("Group ID is missing!");
+        return;
+    }
+
+    fetch(`/chat/get_available_users/${groupId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert("Error: " + data.error);
+                return;
+            }
+
+            let availableUsersContainer = document.getElementById("availableUsersContainer");
+            availableUsersContainer.innerHTML = ""; 
+
+            if (data.users.length === 0) {
+                availableUsersContainer.innerHTML = `<p class="text-muted">No available users to add.</p>`;
+                return;
+            }
+
+            data.users.forEach(user => {
+                let userDiv = document.createElement("div");
+                userDiv.classList.add("d-flex", "justify-content-between", "align-items-center", "p-2", "border", "rounded", "mb-2");
+                userDiv.innerHTML = `
+                    <div>
+                        <strong>${user.name}</strong> (${user.role})<br>
+                        <small>${user.email} | ${user.contact}</small>
+                    </div>
+                    <button class="btn btn-success btn-sm" onclick="addUserToGroup('${user.id}', '${user.role}', '${user.contact}', '${user.name}')">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                `;
+                availableUsersContainer.appendChild(userDiv);
+            });
+
+            document.getElementById("addMembersSection").style.display = "block";
+        })
+        .catch(error => console.error("Error fetching available users:", error));
+}
+
+
+function saveGroupChanges() {
+    let groupId = document.getElementById("groupId").value;
+    let groupName = document.getElementById("groupNamemodel").value.trim();
+    let groupDescription = document.getElementById("groupDescriptionmodel").value.trim();
+
+    if (!groupId) {
+        alert("Group ID is missing!");
+        return;
+    }
+
+    let updateData = {
+        group_id: groupId,
+        removed_members: removedParticipants
+    };
+
+    if (groupName) updateData.group_name = groupName;
+    if (groupDescription) updateData.group_description = groupDescription;
+    if (newParticipants.length > 0) updateData.new_members = newParticipants;
+
+    fetch("/chat/update_group", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            alert("Error: " + data.error);
+        } else {
+            alert("Group updated successfully!");
+            let modal = bootstrap.Modal.getInstance(document.getElementById("editGroupModal"));
+            if (modal) modal.hide();
+            location.reload();
+        }
+    })
+    .catch(error => console.error("Error updating group:", error));
+}
+
+
+function addUserToGroup(userId, userRole, userContact, userName) {
+    let participantsContainer = document.getElementById("groupParticipantsContainer");
+
+    event.stopPropagation();  
+    event.preventDefault();  
+
+    if (newParticipants.some(user => user.id === userId)) {
+        alert("User already added!");
+        return;
+    }
+
+    newParticipants.push({ id: userId, role: userRole, contact: userContact });
+
+    let participantDiv = document.createElement("div");
+    participantDiv.classList.add("col-md-4", "mb-2", "d-flex", "align-items-center");
+    participantDiv.setAttribute("data-user-id", userId);
+
+    participantDiv.innerHTML = `
+        <div class="p-2 border rounded d-flex justify-content-between w-100">
+            <div>
+                <span>${userName}</span>
+                <div class="text-muted">${userRole}</div>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="removeNewMember('${userId}')" style="height: 30px; margin-top: 8px;">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
+    `;
+
+    participantsContainer.appendChild(participantDiv);
+}
+
+
+function removeNewMember(userId) {
+    newParticipants = newParticipants.filter(user => user.id !== userId);
+    let userDiv = document.querySelector(`[data-user-id='${userId}']`);
+    if (userDiv) {
+        userDiv.remove();
+    }
+}
+
+
+function removeExistingMember(userId) {
+    removedParticipants.push(userId);
+    let userDiv = document.querySelector(`[data-member-id='${userId}']`);
+    if (userDiv) {
+        userDiv.remove();
+    }
+}
+
+
 </script>
 </body>
 </html>
