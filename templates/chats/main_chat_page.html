@@ -6,7 +6,7 @@
     <title>Chat Application UI</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-     
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <!-- Link JavaScript file -->
     <script src="{{ url_for('static', filename='chat_js/landing_page.js') }}"></script>
     <script src="{{ url_for('static', filename='chat_js/group_chat.js') }}"></script>
@@ -19,12 +19,76 @@
 </head>
 <style>
     .card {
-    border-radius: 10px;
-    transition: 0.3s;
-}
-.card:hover {
-    transform: scale(1.05);
-}
+        border-radius: 10px;
+        transition: 0.3s;
+    }
+    .card:hover {
+        transform: scale(1.05);
+    }
+
+    /* Ensure the image remains a perfect circle */
+    #groupChats .list-group-item img {
+        border-radius: 50%;  /* Circular image */
+    }
+
+    /* Optional: styling for the group name */
+    #groupChats .list-group-item h6 {
+        margin: 0;
+        font-size: 16px; /* Adjust font size to match design */
+        font-weight: 500;
+        color: #fff;
+    }
+
+    /* Optional: Styling for the chat list hover effect */
+    #groupChats .list-group-item:hover {
+        background-color: #343a40; /* Darken on hover */
+        cursor: pointer;
+    }
+
+    /* Optional: styling for the entire list container */
+    .personal-chats-container {
+        margin-top: 20px;
+    }
+
+    .personal-chats-heading {
+        font-size: 18px;
+        color: #fff;
+        font-weight: 600;
+    }
+        /* Container with spacing */
+        .profile-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    max-width: 350px;
+                    margin: 0 auto;
+                    padding: 20px;
+                    background-color: #f8f9fa;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+                }
+
+                /* Hover effect on profile image */
+                .profile-img:hover {
+                    transform: scale(1.1);
+                    border-color: #28a745; /* Change border color on hover */
+                }
+
+                /* For the action button */
+                .btn-primary {
+                    transition: background-color 0.3s ease, transform 0.2s ease;
+                }
+
+                .btn-primary:hover {
+                    background-color: #0056b3;
+                    transform: scale(1.05);
+                }
+
+                /* Icon Styling */
+                .bi {
+                    margin-right: 8px;
+                }
 
 </style>
 <body>
@@ -64,31 +128,43 @@
         </ul>
     {% endif %}
 
-<!-- Group Chats -->
-{% if group_chats %}
-<div class="personal-chats-container">
-    <i class="fas fa-users"></i>
-    <h6 class="personal-chats-heading"><strong>Group Chats</strong></h6>
-    <div class="line"></div>
-</div>
-<ul class="list-group" id="groupChats">
-    {% for chat in group_chats %}
-    <li class="list-group-item bg-transparent text-white d-flex align-items-center" 
-        onclick="openGroupChat('{{ chat.group_id }}', '{{ chat.receiver_name }}')">
-        
-        <!-- Group Image -->
-        <img src="{{ url_for('static', filename='images/' + (chat.group_image if chat.group_image else 'admin.png')) }}" 
-             alt="Group Image" 
-             class="rounded-circle me-2" 
-             style="width: 35px; height: 35px; object-fit: cover; cursor: pointer;"
-             onclick="viewUserProfile(event, '{{ chat.group_id }}', '{{ chat.receiver_name }}', '', 'Group', '')">
-        
-        {{ chat.receiver_name }}
-        
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
+    {% if group_chats %}
+    <div class="personal-chats-container">
+        <i class="fas fa-users"></i>
+        <h6 class="personal-chats-heading"><strong>Group Chats</strong></h6>
+        <div class="line"></div>
+    </div>
+
+    <ul class="list-group" id="groupChats">
+        {% for chat in group_chats %}
+        <li class="list-group-item bg-transparent text-white d-flex align-items-center p-3" 
+            onclick="openGroupChat('{{ chat.group_id }}', '{{ chat.receiver_name }}')">
+            
+            <!-- Group Image -->
+            <div class="d-flex align-items-center">
+                {% if chat.group_photo %}
+                <img src="{{ chat.group_photo }}" 
+                    alt="Group Image" 
+                    class="rounded-circle me-3" 
+                    style="width: 45px; height: 45px; object-fit: cover; cursor: pointer;">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/' + (chat.group_image if chat.group_image else 'admin.png')) }}" 
+                    alt="Group Image" 
+                    class="rounded-circle me-3" 
+                    style="width: 45px; height: 45px; object-fit: cover; cursor: pointer;">
+                {% endif %}
+                
+                <!-- Group Name -->
+                <div>
+                    <h6 class="m-0" style="font-size: 16px; font-weight: 500;">{{ chat.receiver_name }}</h6>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    
 
 
         </div>
@@ -116,7 +192,7 @@
 
 
                 <!-- User Profile Image -->
-                <img src="static/images/admin.jpg" 
+                <img src="data:image/jpeg;base64,{{ image }}" 
                     alt="User Profile" 
                     class="rounded-circle ms-2" 
                     style="width: 40px; height: 40px; object-fit: cover; cursor: pointer; margin-right: 20px; margin-top: 10px;"
@@ -131,16 +207,38 @@
                 <button class="btn-close position-absolute top-0 end-0 m-3" onclick="toggleUserSidebar()"></button>
 
                 <!-- User Profile Details -->
-                <div class="text-center mt-4">
-                    <img src="static/images/admin.jpg" 
-                        alt="User Profile" 
-                        class="rounded-circle mb-3" 
-                        style="width: 80px; height: 80px; object-fit: cover;">
+            <div class="text-center mt-4">
+                <div class="profile-container">
+                    <!-- Profile Image with hover effect -->
+                    <div class="profile-image-container mb-4">
+                        <img src="data:image/jpeg;base64,{{ image }}" alt="User Profile" class="profile-img mb-3" style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #007bff; border-radius: 50%; transition: all 0.3s ease;">
+                    </div>
                     
-                    <h5></h5>
-                    <p class="text-muted"></p>
-                    <p class="text-muted"></p>
+                    <!-- User Name -->
+                    <h3 class="font-weight-bold">{{ user.name }}</h3>
+                    
+                    <!-- User Role -->
+                    <h5 class="text-muted">{{ role }}</h5>
+
+                    <!-- Email and Contact Information with Icons -->
+                    <div class="mt-3">
+                        <p class="text-muted mb-2">
+                            <i class="bi bi-envelope-paper" style="color: #007bff;"></i>
+                            <a href="mailto:{{ user.email }}" class="text-decoration-none text-dark">{{ user.email }}</a>
+                        </p>
+                        <p class="text-muted">
+                            <i class="bi bi-telephone" style="color: #007bff;"></i>
+                            <a href="tel:+91{{ user.contact }}" class="text-decoration-none text-dark">{{ user.contact }}</a>
+                        </p>
+                    </div>
+
+                    <!-- Action Button (Optional) -->
+                    <!-- <div class="mt-4">
+                        <button class="btn btn-primary rounded-pill px-4 py-2" style="font-weight: bold;">Edit Profile</button>
+                    </div> -->
                 </div>
+            </div>
+
             </div>
 
             <div class="chat-header">
@@ -157,7 +255,7 @@
         </div>
     </div>
 
- <!-- Modal -->
+<!-- Modal -->
 <div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content" style="height: 80vh;"> <!-- Fixed height -->
@@ -176,12 +274,23 @@
                         <label for="groupDescription" class="form-label">Group Description</label>
                         <textarea class="form-control" id="groupDescription" rows="3" placeholder="Enter group description"></textarea>
                     </div>
-
+                    <!-- Profile Photo Upload -->
+                    <div class="mb-3">
+                        <label for="groupPhoto" class="form-label">Group Profile Photo</label>
+                        <div class="d-flex align-items-center">
+                            <!-- Image Preview (on the left side) -->
+                            <div class="me-3">
+                                <img id="imagePreview" src="#" alt="Image Preview" 
+                                    style="width: 120px; height: 120px; margin-top: 10px; display: none; border-radius: 50%; border: 2px solid #007bff; object-fit: cover;">
+                            </div>
+                            <!-- File Input (on the right side) -->
+                            <input type="file" class="form-control" id="groupPhoto" accept="image/*">
+                        </div>
+                    </div>                                                         
                     <div class="mb-3">
                         <label class="form-label">Selected Members</label>
-                        
-                                <div id="selectedMembers">
-                            
+                        <div id="selectedMembers">
+                            <!-- Selected members will be shown here -->
                         </div>
                     </div>
 
@@ -208,7 +317,6 @@
                                 </div>
                             </div>
                             {% endfor %}
-
                         </div>
                     </div>
                 </form>
@@ -216,7 +324,6 @@
             <div class="modal-footer" style="position: absolute; bottom: 0; width: 100%; background: white;">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 <button id="createGroupBtn" class="btn btn-primary">Create Group</button>
-
             </div>
         </div>
     </div>
@@ -232,11 +339,20 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center">
-                <img id="profilePicture" src="https://via.placeholder.com/100" class="rounded-circle mb-3" alt="Profile Picture">
-                <h5 id="profileName"></h5>
-                <p id="profileRole" class="text-muted"></p>
-                <p><strong>Email:</strong> <span id="profileEmail"></span></p>
-                <p><strong>Contact:</strong> <span id="profileContact"></span></p>
+                <!-- Display User Profile Picture -->
+                <img src="" class="rounded-circle mb-3" alt="Profile Picture">
+
+                <!-- Display User Name -->
+                <h5>User Name</h5>
+                
+                <!-- Display User Role -->
+                <p class="text-muted">User Role</p>
+
+                <!-- Display User Email -->
+                <p><strong>Email:</strong> <span>user@example.com</span></p>
+
+                <!-- Display User Contact -->
+                <p><strong>Contact:</strong> <span>123-456-7890</span></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -308,14 +424,47 @@
 document.querySelectorAll('.group-chat').forEach(group => {
     group.addEventListener('click', function () {
         let chatWindow = document.getElementById("chatWindow");
-        chatWindow.setAttribute("data-group-id", this.getAttribute('data-group-id')); // Set Group ID
-        chatWindow.removeAttribute("data-user-id"); // Remove personal chat ID
+        let groupPhoto = this.getAttribute('data-group-photo'); // Get Group Photo URL
+        
+        // Set Group ID for Group Chat
+        chatWindow.setAttribute("data-group-id", this.getAttribute('data-group-id')); 
+        
+        // Remove personal chat attributes
+        chatWindow.removeAttribute("data-user-id"); // Remove user ID (not needed in group chat)
         chatWindow.removeAttribute("data-user-role"); // Remove user role (not needed in group chat)
+        
+        // Display the Group Photo
+        let groupPhotoElement = document.getElementById("groupPhoto");
+        
+        // If group photo exists, set it; otherwise, use a default photo
+        if (groupPhoto) {
+            groupPhotoElement.src = groupPhoto; // Set the Group Photo
+        } else {
+            groupPhotoElement.src = '/static/images/default_group.png'; // Default Group Photo
+        }
 
         console.log("Group Chat Selected");
         console.log("Group ID:", this.getAttribute('data-group-id'));
+        console.log("Group Photo:", groupPhoto);
     });
 });
+
+
+
+// Handle image preview on file input change
+document.getElementById("groupPhoto").addEventListener("change", function (event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const imagePreview = document.getElementById("imagePreview");
+            imagePreview.src = e.target.result; // Set the source to the uploaded file
+            imagePreview.style.display = "block"; // Show the image preview
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
 
 // Handle Personal Chat Selection
 document.querySelectorAll('.personal-chat').forEach(user => {

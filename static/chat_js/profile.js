@@ -1,18 +1,22 @@
+// Function to show the user profile
+function showUserProfile(user) {
+    // Set the dynamic content
+    document.getElementById('profileName').innerText = user.name || 'N/A';
+    document.getElementById('profileRole').innerText = user.role || 'N/A';
+    document.getElementById('profileEmail').innerText = user.email || 'N/A';
+    document.getElementById('profileContact').innerText = user.contact || 'N/A';
+    
+    // Handle the profile picture (fallback if no picture is provided)
+    document.getElementById('profilePicture').src = user.profile_picture_url || 'https://via.placeholder.com/100';
 
-// Veiw user profile of in chat list
-    function viewUserProfile(event, userId, userName, userEmail, userRole, userContact) {
-        event.stopPropagation(); // Prevent chat opening
+    // Show the modal
+    var profileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
+    profileModal.show();
+}
 
-        // Set profile details
-        document.getElementById('profileName').innerText = userName;
-        document.getElementById('profileEmail').innerText = userEmail || 'N/A';
-        document.getElementById('profileRole').innerText = userRole;
-        document.getElementById('profileContact').innerText = userContact || 'N/A';
+// Trigger showing the profile modal (this could be triggered by an event in your actual app)
+showUserProfile(user);
 
-        // Show the modal
-        var profileModal = new bootstrap.Modal(document.getElementById('userProfileModal'));
-        profileModal.show();
-    }
  
 // JavaScript for Sidebar Toggle 
 

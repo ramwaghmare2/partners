@@ -29,34 +29,61 @@ let selectedMembers = [];
         document.getElementById("createGroupBtn").addEventListener("click", function() {
             let groupName = document.getElementById("groupName").value;
             let description = document.getElementById("groupDescription").value;
-
-            if (!groupName || selectedMembers.length === 0) {
-                alert("Please enter a group name and select at least one member.");
-                return;
+        
+            // Get the file input element for the group photo
+            let groupPhotoInput = document.getElementById("groupPhoto");
+            let groupPhotoFile = groupPhotoInput.files[0];
+            let groupPhotoBase64 = null;
+        
+            // If a file is selected, convert it to base64
+            if (groupPhotoFile) {
+                let reader = new FileReader();
+                reader.onloadend = function() {
+                    groupPhotoBase64 = reader.result;
+                    submitGroupData();
+                };
+                reader.readAsDataURL(groupPhotoFile);  // Convert image to base64
+            } else {
+                submitGroupData();
             }
-
-            let groupData = {
-                group_name: groupName,
-                description: description,
-                members: selectedMembers.map(member => ({
-                    id: member.userid,
-                    mobile: member.mobile, // Use 'mobile' instead of 'contact'
-                    role: member.role
-                }))
-            };
-
-            fetch("/chat/create_group", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(groupData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.message);
-                location.reload();
-            })
-            .catch(error => console.error("Error:", error));
+        
+            // Submit the group data to the server
+            function submitGroupData() {
+                if (!groupName || selectedMembers.length === 0) {
+                    alert("Please enter a group name and select at least one member.");
+                    return;
+                }
+        
+                let groupData = {
+                    group_name: groupName,
+                    description: description,
+                    members: selectedMembers.map(member => ({
+                        id: member.userid,
+                        mobile: member.mobile, // Use 'mobile' instead of 'contact'
+                        role: member.role
+                    }))
+                };
+        
+                // If a photo was selected, include it in the group data
+                if (groupPhotoBase64) {
+                    groupData.group_photo = groupPhotoBase64;
+                }
+        
+                // Send the request
+                fetch("/chat/create_group", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(groupData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    location.reload();  // Reload the page after group creation
+                })
+                .catch(error => console.error("Error:", error));
+            }
         });
+        
     });
 
     function updateSelectedMembers() {
