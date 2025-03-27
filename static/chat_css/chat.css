@@ -164,3 +164,123 @@ body { background-color: #E6ECF2; font-family: 'Poppins', sans-serif; }
     from { transform: translateY(30px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
 }
+
+
+#newMessagePopup {
+    display: none;
+    position: fixed;
+    bottom: 70px;
+    left: 61%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #6247EA, #5A8DEE);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;  /* Keeps text and arrow in one line */
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap; /* Prevents text wrapping */
+    min-width: 120px; /* Ensures enough space */
+}
+
+/* Arrow with a vertical standing line */
+.arrow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    height: 100%; /* Matches the height of the parent div */
+}
+
+.vertical-line {
+    width: 2px;
+    height: 10px;
+    background: white;
+    margin-bottom: 2px; /* Ensures proper spacing */
+}
+
+.arrow-down {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid white;
+}
+
+
+.card {
+    border-radius: 10px;
+    transition: 0.3s;
+}
+.card:hover {
+    transform: scale(1.05);
+}
+
+/* Chat body container */
+#chatBody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+    max-height: 550px;
+    overflow-y: auto;
+}
+
+/* Wrapper for messages */
+.message-wrapper {
+    display: flex;
+    width: 100%;
+}
+
+/* Align sender messages to the right */
+.message-wrapper.sent {
+    justify-content: flex-start;
+}
+
+/* Align received messages to the left */
+.message-wrapper.received {
+    justify-content: flex-end;
+}
+
+/* Message styling */
+.chat-message {
+    max-width: 60%;
+    padding: 10px;
+    border-radius: 10px;
+    word-wrap: break-word;
+    font-size: 14px;
+}
+
+/* Sent message style */
+.sent .chat-message {
+    background-color: #DCF8C6;
+    text-align: left;
+    border-top-right-radius: 0;
+}
+
+/* Received message style */
+.received .chat-message {
+    background-color: #E5E5EA;
+    text-align: left;
+    border-top-left-radius: 0;
+}
+
+/* Message sender name */
+.message-user {
+    font-weight: bold;
+    margin-bottom: 3px;
+}
+
+/* Message time */
+.message-time {
+    font-size: 12px;
+    color: gray;
+    margin-top: 5px;
+    text-align: right;
+}

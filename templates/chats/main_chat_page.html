@@ -16,17 +16,11 @@
     <!-- Link CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='chat_css/chat.css') }}">
 
-</head>
-<style>
-    .card {
-    border-radius: 10px;
-    transition: 0.3s;
-}
-.card:hover {
-    transform: scale(1.05);
-}
+    <!-- Include Font Awesome for the icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
 
-</style>
+</head>
+
 <body>
     <div class="chat-container">
         <!-- Left Sidebar -->
@@ -149,6 +143,12 @@
             </div>
             <div class="chat-body" id="chatBody">
                 <p class="text-muted text-center">No chat selected.</p>
+            </div>
+            
+            <!-- Floating notification -->
+            <div id="newMessagePopup" style="display:none;">  
+                New Messages
+                
             </div>
             <div class="chat-footer">
                 <input type="text" class="form-control" id="messageInput" placeholder="Type a message...">
