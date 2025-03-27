@@ -575,12 +575,14 @@ def fetch_group_messages():
         formatted_messages = [{
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
-            "sender_name": msg.get("sender_name")
+            #"sender_name": msg.get("sender_name"),
+            "sender_contact": msg.get("sender_contact")  # Include sender_contact
         } for msg in all_messages]
-
+        print("formatted_messages",formatted_messages)
         return jsonify({
             "group_id": str(group_chat["_id"]),
-            "messages": formatted_messages
+            "messages": formatted_messages,
+            "sender_contact": sender.contact if sender else None  # Send logged-in user's contact
         }), 200
 
     except Exception as e:
@@ -729,8 +731,10 @@ def fetch_personal_messages():
         formatted_messages = [{
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
-            "sender_name": msg.get("sender_name")
+            "sender_name": msg.get("sender_name"),
+            "sender_contact": msg.get("sender_contact")  # Include sender_contact
         } for msg in all_messages]
+
 
         return jsonify({
             "chat_ids": [str(chat["_id"]) for chat in chat_list],
