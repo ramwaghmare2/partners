@@ -1,4 +1,6 @@
-function openPersonalChat(receiverId, receiverName, receiverRole, receiverContact) {
+
+// Javascript for fetch personal messages
+    function openPersonalChat(receiverId, receiverName, receiverRole, receiverContact) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
@@ -29,14 +31,30 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                 let isScrolledToBottom = chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 5;
                 
                 chatBody.innerHTML = "";
-
                 if (!data.messages || data.messages.length === 0) {
                     chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
                 } else {
                     let senderContact = chatWindow.getAttribute("data-user-contact");
-                    
+                    let lastDate = "";
+
                     data.messages.forEach(msg => {
                         let isSender = msg.sender_contact === senderContact;
+                        
+                        // Manually parse the timestamp: "27-03-2025 04:35:50 PM"
+                        let [datePart, timePart, ampm] = msg.timestamp.split(" ");
+                        let [day, month, year] = datePart.split("-"); // Split DD-MM-YYYY
+                        let formattedDate = `${day}-${month}-${year}`;
+                        let formattedTime = `${timePart} ${ampm}`; // Keep time as is
+
+                        // Insert date separator if date changes
+                        if (formattedDate !== lastDate) {
+                            let dateElement = document.createElement("div");
+                            dateElement.classList.add("date-separator");
+                            dateElement.textContent = formattedDate;
+                            chatBody.appendChild(dateElement);
+                            lastDate = formattedDate;
+                        }
+
                         let messageWrapper = document.createElement("div");
                         messageWrapper.classList.add("message-wrapper", isSender ? "sent" : "received");
 
@@ -44,16 +62,15 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                         messageElement.classList.add("chat-message");
 
                         messageElement.innerHTML = `
-                            <div class="message-user">${msg.sender_name}</div>
                             <div class="message-text">${msg.text}</div>
-                            <div class="text-muted message-time">${msg.timestamp}</div>
+                            <div class="text-muted message-time">${formattedTime}</div>
                         `;
 
                         messageWrapper.appendChild(messageElement);
                         chatBody.appendChild(messageWrapper);
                     });
 
-                    // ✅ Scroll to bottom only if opening chat or user is already at the bottom
+                    // Scroll to bottom only if opening chat or user is already at the bottom
                     if (currentMessageCount !== lastMessageCount || lastMessageCount === 0 || isScrolledToBottom) {
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
@@ -70,7 +87,7 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
     fetchPersonalMessages();
     window.refreshInterval = setInterval(fetchPersonalMessages, 1000);
 
-    // ✅ Force scroll to bottom when opening chat
+    // Force scroll to bottom when opening chat
     setTimeout(() => {
         chatBody.scrollTop = chatBody.scrollHeight;
     }, 200);
@@ -82,6 +99,7 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
 }
 
 
+// Javascript for fetch group messages
 function openGroupChat(groupId, groupName) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
@@ -106,8 +124,8 @@ function openGroupChat(groupId, groupName) {
             .then(response => response.json())
             .then(data => {
                 let currentMessageCount = data.messages.length;
-                let isScrolledToBottom = chatBody.scrollTop + chatBody.clientHeight >= chatBody.scrollHeight - 10; // Check if near bottom
-                
+                let isScrolledToBottom = chatBody.scrollTop + chatBody.clientHeight >= chatBody.scrollHeight - 10;
+
                 chatBody.innerHTML = "";
                 if (!data.messages || data.messages.length === 0) {
                     chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
@@ -115,34 +133,47 @@ function openGroupChat(groupId, groupName) {
                     if (data.sender_contact) {
                         localStorage.setItem("sender_contact", data.sender_contact);
                     }
-                    
+
                     let senderContact = localStorage.getItem("sender_contact");
                     console.log("Logged-in user contact:", senderContact);
+
+                    let lastDate = ""; // Track the last displayed date
 
                     data.messages.forEach(msg => {
                         let isSender = msg.sender_contact === senderContact;
                         let messageWrapper = document.createElement("div");
-                        messageWrapper.classList.add("message-wrapper", isSender ? "sent" : "received");
+                        messageWrapper.classList.add("message-wrapper", isSender ? "received" : "sent");
 
                         let messageElement = document.createElement("div");
                         messageElement.classList.add("chat-message");
-                        
+
+                        // Extract date and time from timestamp
+                        let [date, time] = msg.timestamp.split(" "); // "27-03-2025 03:51:19 PM"
+                        let formattedTime = time; // Keep time as is
+
+                        // Display date only if it's different from the last displayed one
+                        if (date !== lastDate) {
+                            let dateElement = document.createElement("div");
+                            dateElement.classList.add("date-separator");
+                            dateElement.innerHTML = `<span>${date}</span>`;
+                            chatBody.appendChild(dateElement);
+                            lastDate = date; // Update last displayed date
+                        }
+
                         messageElement.innerHTML = `
                             <div class="message-text">${msg.text}</div>
-                            <div class="text-muted message-time">${msg.timestamp}</div>
+                            <div class="text-muted message-time">${formattedTime}</div>
                         `;
 
                         messageWrapper.appendChild(messageElement);
                         chatBody.appendChild(messageWrapper);
                     });
 
-                    // Scroll to the bottom if new messages arrive and the user was already at the bottom
                     if (isScrolledToBottom) {
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
                 }
 
-                // Show "new message" button if new messages arrive and user is not at the bottom
                 if (currentMessageCount > lastMessageCount && !isScrolledToBottom) {
                     newMessageButton.style.display = "block";
                 } else {
@@ -162,7 +193,6 @@ function openGroupChat(groupId, groupName) {
         newMessageButton.style.display = "none";
     });
 
-    // Initial scroll to bottom when opening chat
     setTimeout(() => {
         chatBody.scrollTop = chatBody.scrollHeight;
     }, 100);
