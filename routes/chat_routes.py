@@ -14,6 +14,11 @@ from utils.services import ROLE_MODEL_MAP
 chat_bp = Blueprint('chat_bp', __name__, static_folder='../static', template_folder='../templates/chats')
 
 
+# Get current time in IST (Indian Standard Time)
+timestamp_ist = datetime.now(pytz.timezone('Asia/Kolkata'))
+
+# Format in 12-hour format with AM/PM
+formatted_timestamp = timestamp_ist.strftime("%I:%M:%S %p")
 
 @chat_bp.route('/landing', methods=['GET'])
 def get_landing_page():
@@ -264,6 +269,8 @@ def start_chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+
 @chat_bp.route('/send_message', methods=['POST'])
 def send_message():
     try:
@@ -299,8 +306,10 @@ def send_message():
             print("Error: Sender not found")
             return jsonify({"error": "Sender not found"}), 404
 
-        timestamp = datetime.now(pytz.timezone('Asia/Kolkata'))  # Current timestamp
+        timestamp = datetime.now(pytz.timezone('Asia/Kolkata')).strftime("%d-%m-%Y %I:%M:%S %p")
 
+
+        print("timestamp",timestamp)
         # **Handle Group Chat**
         if ObjectId.is_valid(receiver_id):  
             print("Valid ObjectId detected, checking for group chat...")
@@ -464,42 +473,6 @@ def create_group():
         return jsonify({"error": str(e)}), 500
     
 
-"""
-@chat_bp.route('/update_group_name', methods=['POST'])
-def update_group_name():
-    try:
-        data = request.get_json()
-
-        # Ensure data is provided
-        group_name = data.get('group_name')
-        group_id = data.get('group_id')
-
-        if not group_name or not group_id:
-            return jsonify({'error': 'Invalid data: group_name and group_id are required'}), 400
-
-        try:
-            # Convert group_id from string to ObjectId
-            group_id = ObjectId(group_id)
-        except Exception as e:
-            return jsonify({'error': 'Invalid group_id format'}), 400
-        
-        # Find the group in MongoDB by its group_id
-        group = group_chat_collection.find_one({"_id": group_id})
-        if not group:
-            return jsonify({'error': 'Group not found'}), 404
-        
-        # Update the group name
-        group_chat_collection.update_one({"_id": group_id}, {"$set": {"name": group_name}})
-
-        return jsonify({'message': 'Group name updated successfully!'}), 200
-
-    except Exception as e:
-        print(f"Error: {e}")
-        print(traceback.format_exc())
-
-        return jsonify({'error': 'An unexpected error occurred. Please try again later.'}), 500
-
-"""
 @chat_bp.route('/get_group_details', methods=['GET'])
 def get_group_details():
     group_id = request.args.get('group_id')
@@ -578,7 +551,7 @@ def fetch_group_messages():
             #"sender_name": msg.get("sender_name"),
             "sender_contact": msg.get("sender_contact")  # Include sender_contact
         } for msg in all_messages]
-        print("formatted_messages",formatted_messages)
+
         return jsonify({
             "group_id": str(group_chat["_id"]),
             "messages": formatted_messages,
@@ -590,77 +563,7 @@ def fetch_group_messages():
         return jsonify({"error": str(e)}), 500
     
 
-"""@chat_bp.route('/add_member/<string:group_id>', methods=['POST'])
-def add_member(group_id):
-    try:
-        # Get data from the request
-        member_data = request.get_json()
 
-        if not member_data:
-            return jsonify({"error": "Member data is required"}), 400
-        
-        # Validate the member_data (you can customize this validation based on your schema)
-        if not member_data.get('id') or not member_data.get('role'):
-            return jsonify({"error": "'id' and 'role' are required in the member data"}), 400
-        
-        # Check if the group_id is valid
-        if not ObjectId.is_valid(group_id):
-            return jsonify({"error": "Invalid group ID"}), 400
-        
-        # Add new member to the group
-        result = group_chat_collection.update_one(
-            {'_id': ObjectId(group_id)}, 
-            {'$push': {'members': member_data}}
-        )
-        
-        if result.modified_count > 0:
-            return jsonify({"message": "Member added successfully"}), 200
-        else:
-            return jsonify({"error": "Failed to add member, group may not exist"}), 400
-    
-    except PyMongoError as e:
-        # Handle any MongoDB-related errors
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-    except Exception as e:
-        # Catch any other unexpected errors
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-    
-
-@chat_bp.route('/remove_member/<string:group_id>', methods=['DELETE'])
-def remove_member(group_id):
-    try:
-        # Get data from the request
-        member_id = request.json.get('id')
-        print("member_id",member_id)
-        member_role = request.json.get('role')
-        print("member_role",member_role)
-        
-        if not member_id or not member_role:
-            return jsonify({"error": "Both 'id' and 'role' are required"}), 400
-        
-        # Check if the group_id is valid
-        if not ObjectId.is_valid(group_id):
-            return jsonify({"error": "Invalid group ID"}), 400
-        
-        # Remove member from the group's members
-        result = group_chat_collection.update_one(
-            {'_id': ObjectId(group_id)}, 
-            {'$pull': {'members': {'id': member_id, 'role': member_role}}}
-        )
-        
-        if result.modified_count > 0:
-            return jsonify({"message": "Member removed successfully"}), 200
-        else:
-            return jsonify({"error": "Failed to remove member, member may not exist or already removed"}), 400
-    
-    except PyMongoError as e:
-        # Handle any MongoDB-related errors
-        return jsonify({"error": f"Database error: {str(e)}"}), 500
-    except Exception as e:
-        # Catch any other unexpected errors
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-
-"""
 @chat_bp.route('/remove_message/<string:group_id>', methods=['DELETE'])
 def remove_message(group_id):
     try:
@@ -777,41 +680,6 @@ def get_available_users(group_id):
     except Exception as e:
         return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
 
-
-"""
-@chat_bp.route('/update_group/<string:group_id>', methods=['PUT'])
-def update_group(group_id):
-    try:
-        data = request.json
-        group_name = data.get("group_name")
-        group_description = data.get("group_description")
-        new_members = data.get("new_members", [])
-
-        if not ObjectId.is_valid(group_id):
-            return jsonify({"error": "Invalid group ID"}), 400
-
-        update_fields = {}
-
-        if group_name:
-            update_fields["name"] = group_name
-        if group_description:
-            update_fields["description"] = group_description
-        if new_members:
-            update_fields["$push"] = {"members": {"$each": [{"id": uid} for uid in new_members]}}
-
-        result = group_chat_collection.update_one(
-            {"_id": ObjectId(group_id)},
-            {"$set": update_fields} if "$push" not in update_fields else {"$set": update_fields, "$push": update_fields["$push"]}
-        )
-
-        if result.modified_count > 0:
-            return jsonify({"message": "Group updated successfully"}), 200
-        else:
-            return jsonify({"error": "No changes made"}), 400
-
-    except Exception as e:
-        return jsonify({"error": f"An unexpected error occurred: {str(e)}"}), 500
-"""
 
 @chat_bp.route('/update_group', methods=['POST'])
 def update_group():
