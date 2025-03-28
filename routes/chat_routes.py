@@ -1,6 +1,6 @@
 from flask import Blueprint, request, render_template, session, jsonify
 from models import db, Admin, Manager, SuperDistributor, Distributor, Kitchen
-from mdb_connection import personal_chat_collection, group_chat_collection, channel_collection ,messages_collection # Import collections
+from mdb_connection import personal_chat_collection, group_chat_collection
 from datetime import datetime
 from bson import ObjectId
 import traceback
@@ -308,8 +308,8 @@ def send_message():
 
         timestamp = datetime.now(pytz.timezone('Asia/Kolkata')).strftime("%d-%m-%Y %I:%M:%S %p")
 
+        print("timestamp", timestamp)
 
-        print("timestamp",timestamp)
         # **Handle Group Chat**
         if ObjectId.is_valid(receiver_id):  
             print("Valid ObjectId detected, checking for group chat...")
@@ -324,8 +324,10 @@ def send_message():
                     {"$push": {"messages": {
                         "text": message_text, 
                         "timestamp": timestamp, 
+                        "status": "sent",  # Adding status to message
                         "sender_id": sender_id,
                         "sender_role": sender_role,
+                        "sender_name": sender.name,
                         "sender_contact": sender.contact
                     }}}
                 )
@@ -356,8 +358,17 @@ def send_message():
         if existing_chat:
             # Update existing chat
             personal_chat_collection.update_one(
-                {"_id": existing_chat["_id"]},
-                {"$push": {"messages": {"text": message_text, "timestamp": timestamp, "sender_contact": sender.contact}}}
+                {"_id": existing_chat["_id"]},  # Filter condition
+                {  
+                    "$push": {
+                        "messages": {
+                            "text": message_text, 
+                            "timestamp": timestamp,
+                            "status": "sent",  # Adding status to message
+                            "sender_contact": sender.contact
+                        }
+                    }
+                }
             )
             print("Message added to existing personal chat")
         else:
@@ -369,7 +380,11 @@ def send_message():
                 "receiver_id": receiver_id,
                 "receiver_role": receiver_role,
                 "receiver_contact": receiver.contact,
-                "messages": [{"text": message_text, "timestamp": timestamp}]
+                "messages": [{
+                    "text": message_text, 
+                    "timestamp": timestamp,
+                    "status": "sent"  # Adding status to message
+                }],
             }
             personal_chat_collection.insert_one(new_chat)
             print("New personal chat created and message added")
@@ -378,7 +393,7 @@ def send_message():
 
     except Exception as e:
         print("Error in send_message:", e)
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": str(e)}), 500  
 
         
 
@@ -548,7 +563,7 @@ def fetch_group_messages():
         formatted_messages = [{
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
-            #"sender_name": msg.get("sender_name"),
+            "sender_name": msg.get("sender_name"),
             "sender_contact": msg.get("sender_contact")  # Include sender_contact
         } for msg in all_messages]
 
@@ -635,9 +650,10 @@ def fetch_personal_messages():
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
             "sender_name": msg.get("sender_name"),
-            "sender_contact": msg.get("sender_contact")  # Include sender_contact
+            "sender_contact": msg.get("sender_contact"),  # Include sender_contact
+            "status":msg.get("status")
         } for msg in all_messages]
-
+        print(formatted_messages)
 
         return jsonify({
             "chat_ids": [str(chat["_id"]) for chat in chat_list],

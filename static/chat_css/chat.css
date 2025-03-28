@@ -284,3 +284,19 @@ body { background-color: #E6ECF2; font-family: 'Poppins', sans-serif; }
     margin-top: 5px;
     text-align: right;
 }
+
+.sender-name {
+    font-size: 10px;
+    color: rgb(38, 0, 255);
+    text-align: left;
+}
+
+.status-icon {
+    font-size: 12px;
+    color: gray;
+    margin-left: 5px;
+}
+
+.status-icon.read {
+    color: blue;
+}

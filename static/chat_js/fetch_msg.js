@@ -1,6 +1,4 @@
-
-// Javascript for fetch personal messages
-    function openPersonalChat(receiverId, receiverName, receiverRole, receiverContact) {
+function openPersonalChat(receiverId, receiverName, receiverRole, receiverContact) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
@@ -39,12 +37,24 @@
 
                     data.messages.forEach(msg => {
                         let isSender = msg.sender_contact === senderContact;
-                        
-                        // Manually parse the timestamp: "27-03-2025 04:35:50 PM"
+
+                        // Parse timestamp: "27-03-2025 04:35:50 PM"
                         let [datePart, timePart, ampm] = msg.timestamp.split(" ");
                         let [day, month, year] = datePart.split("-"); // Split DD-MM-YYYY
                         let formattedDate = `${day}-${month}-${year}`;
                         let formattedTime = `${timePart} ${ampm}`; // Keep time as is
+
+                        // Determine message status icon (ONLY for sender)
+                        let statusIcon = "";
+                        if (isSender) {
+                            if (msg.status === "sent") {
+                                statusIcon = `<span class="status-icon">&#10003;</span>`; // Single gray tick
+                            } else if (msg.status === "delivered") {
+                                statusIcon = `<span class="status-icon">&#10003;&#10003;</span>`; // Double gray ticks
+                            } else if (msg.status === "read") {
+                                statusIcon = `<span class="status-icon read">&#10003;&#10003;</span>`; // Double blue ticks
+                            }
+                        }
 
                         // Insert date separator if date changes
                         if (formattedDate !== lastDate) {
@@ -63,7 +73,9 @@
 
                         messageElement.innerHTML = `
                             <div class="message-text">${msg.text}</div>
-                            <div class="text-muted message-time">${formattedTime}</div>
+                            <div class="text-muted message-time">
+                                 ${formattedTime} ${isSender ? statusIcon : ""}
+                            </div>
                         `;
 
                         messageWrapper.appendChild(messageElement);
@@ -97,6 +109,7 @@
         newMessageButton.style.display = "none";
     });
 }
+
 
 
 // Javascript for fetch group messages
@@ -148,8 +161,8 @@ function openGroupChat(groupId, groupName) {
                         messageElement.classList.add("chat-message");
 
                         // Extract date and time from timestamp
-                        let [date, time] = msg.timestamp.split(" "); // "27-03-2025 03:51:19 PM"
-                        let formattedTime = time; // Keep time as is
+                        let [date, time ,ampm] = msg.timestamp.split(" "); // "27-03-2025 03:51:19 PM"
+                        let formattedTime = `${time} ${ampm}`; // Keep time as is
 
                         // Display date only if it's different from the last displayed one
                         if (date !== lastDate) {
@@ -161,6 +174,7 @@ function openGroupChat(groupId, groupName) {
                         }
 
                         messageElement.innerHTML = `
+                        ${!isSender ? `<div class="sender-name">${msg.sender_name}</div>` : ""}
                             <div class="message-text">${msg.text}</div>
                             <div class="text-muted message-time">${formattedTime}</div>
                         `;
