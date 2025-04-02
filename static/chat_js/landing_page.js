@@ -1,10 +1,11 @@
 let refreshInterval;
 
-function openChat(receiverId, receiverName, receiverRole = null) {
+function openChat(receiverId, receiverName, receiverRole = null, groupPhoto = null) {
     let chatWindow = document.getElementById("chatWindow");
     let chatTitle = document.getElementById("chatTitle");
     let chatBody = document.getElementById("chatBody");
     let chatFooter = document.querySelector(".chat-footer");
+    let chatHeader = document.querySelector(".chat-header");  // The container for chat title and image
 
     // Debugging logs
     console.log('Receiver ID:', receiverId);
@@ -15,6 +16,14 @@ function openChat(receiverId, receiverName, receiverRole = null) {
     chatWindow.setAttribute("data-user-id", receiverId);
     chatWindow.setAttribute("data-user-role", receiverRole || "group");
     chatTitle.textContent = receiverName;  // Set the chat title
+
+    // If it's a group chat, show group photo in a circle
+    if (groupPhoto) {
+        // Set image URL for group photo, defaulting to a placeholder image if not available
+        let groupImageElement = chatHeader.querySelector(".group-image");
+        groupImageElement.src = groupPhoto || "path/to/default/group-image.png"; // Set the image source
+        groupImageElement.style.display = "block";  // Ensure the image is visible
+    }
 
     // Show chat input area
     chatFooter.style.display = "flex";
@@ -72,6 +81,7 @@ function openChat(receiverId, receiverName, receiverRole = null) {
     fetchMessages();
     window.refreshInterval = setInterval(fetchMessages, 1000);
 }
+
 
 
        document.addEventListener("DOMContentLoaded", function () {
