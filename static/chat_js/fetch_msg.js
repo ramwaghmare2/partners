@@ -34,16 +34,16 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                 } else {
                     let senderContact = chatWindow.getAttribute("data-user-contact");
                     let lastDate = "";
-
+    
                     data.messages.forEach(msg => {
                         let isSender = msg.sender_contact === senderContact;
-
+    
                         // Parse timestamp: "27-03-2025 04:35:50 PM"
                         let [datePart, timePart, ampm] = msg.timestamp.split(" ");
                         let [day, month, year] = datePart.split("-"); // Split DD-MM-YYYY
                         let formattedDate = `${day}-${month}-${year}`;
                         let formattedTime = `${timePart} ${ampm}`; // Keep time as is
-
+    
                         // Determine message status icon (ONLY for sender)
                         let statusIcon = "";
                         if (isSender) {
@@ -55,7 +55,7 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                                 statusIcon = `<span class="status-icon read">&#10003;&#10003;</span>`; // Double blue ticks
                             }
                         }
-
+    
                         // Insert date separator if date changes
                         if (formattedDate !== lastDate) {
                             let dateElement = document.createElement("div");
@@ -64,30 +64,31 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                             chatBody.appendChild(dateElement);
                             lastDate = formattedDate;
                         }
-
+    
+                        // Create a message wrapper for left or right alignment based on sender or receiver
                         let messageWrapper = document.createElement("div");
                         messageWrapper.classList.add("message-wrapper", isSender ? "sent" : "received");
-
+    
                         let messageElement = document.createElement("div");
                         messageElement.classList.add("chat-message");
-
+    
                         messageElement.innerHTML = `
                             <div class="message-text">${msg.text}</div>
                             <div class="text-muted message-time">
                                  ${formattedTime} ${isSender ? statusIcon : ""}
                             </div>
                         `;
-
+    
                         messageWrapper.appendChild(messageElement);
                         chatBody.appendChild(messageWrapper);
                     });
-
+    
                     // Scroll to bottom only if opening chat or user is already at the bottom
                     if (currentMessageCount !== lastMessageCount || lastMessageCount === 0 || isScrolledToBottom) {
                         chatBody.scrollTop = chatBody.scrollHeight;
                     }
                 }
-
+    
                 if (currentMessageCount > lastMessageCount && !isScrolledToBottom) {
                     newMessageButton.style.display = "block";
                 }
@@ -95,6 +96,11 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
             })
             .catch(error => console.error("Error fetching personal messages:", error));
     }
+    
+    
+        
+    
+    
 
     fetchPersonalMessages();
     window.refreshInterval = setInterval(fetchPersonalMessages, 1000);

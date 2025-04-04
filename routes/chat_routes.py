@@ -7,7 +7,10 @@ import traceback
 from pymongo.errors import PyMongoError
 import time
 import pytz
-from utils.services import ROLE_MODEL_MAP
+import base64
+from bson import Binary
+from io import BytesIO
+from utils.services import ROLE_MODEL_MAP, get_image
 
 
 # Initialize Blueprint
@@ -26,7 +29,7 @@ def get_landing_page():
         # Get user ID and role from session
         user_id = session.get("user_id")
         user_role = session.get("role")
-        print("user_role",user_role)
+        encoded_image = get_image(user_role, user_id)
 
         if not user_id or not user_role:
             return "Unauthorized: User not logged in", 401
@@ -42,7 +45,7 @@ def get_landing_page():
 
         user_model = ROLE_MODEL_MAP.get(user_role)  # Fetch the correct model
         user = user_model.query.get(user_id) if user_model else None
-        print
+        
         all_users = []
         for role, model in role_model_map.items():
             users = model.query.all()
@@ -60,6 +63,17 @@ def get_landing_page():
             return "User not found", 404
 
         user_mobile = user.contact  # Fetch mobile number
+
+        # Mark all the messages as 'received' for the logged-in user
+        personal_chats = list(personal_chat_collection.find({"$or": [{"sender_contact": user_mobile}, {"receiver_contact": user_mobile}]}))
+        
+        for chat in personal_chats:
+            for msg in chat.get("messages", []):
+                if msg.get("receiver_contact") == user_mobile and msg.get("status") != "received":
+                    msg["status"] = "received"
+            
+            # Update the chat with the modified messages
+            personal_chat_collection.update_one({"_id": chat["_id"]}, {"$set": {"messages": chat["messages"]}})
 
         # Fetch chats where the logged-in user is the sender
         sender_chats = list(personal_chat_collection.find({"sender_contact": user_mobile}))        
@@ -143,9 +157,18 @@ def get_landing_page():
                 }
             }
         }))
-        print(f'user_groups {user_groups}')
         group_chat_data = []
         for group in user_groups:
+            group_image_binary = group.get("group_photo")  # Fetch the binary data for the image
+
+            if group_image_binary:
+                # Convert the binary image to a base64 string
+                group_image_base64 = base64.b64encode(group_image_binary).decode('utf-8')
+                group["group_photo"] = f"data:image/jpeg;base64,{group_image_base64}"  # Format for embedding in img tag
+                
+            else:
+                group["group_photo"] = None  # If no image, set it to None
+
             group_chat_data.append({
                 "group_id": str(group["_id"]),
                 "receiver_name": group["name"],
@@ -153,15 +176,17 @@ def get_landing_page():
                 "created_by": group["created_by"],
                 "members": group["members"],
                 "last_message": group.get("messages", [])[-1] if group.get("messages") else {},
+                "group_photo": group.get("group_photo")  # Pass the Base64 string for the image
             })
-        print(group_chat_data)
 
         return render_template(
             "chats/main_chat_page.html",
             user=user,
+            role=user_role,
             personal_chats=personal_chat_data,
             group_chats=group_chat_data,
-            all_users=all_users
+            all_users=all_users,
+            image=encoded_image
         )
 
     except Exception as e:
@@ -405,11 +430,10 @@ def create_group():
         group_name = data.get("group_name")
         description = data.get("description")
         members = data.get("members")  # List of {"id": user_id, "mobile": contact_number, "role": user_role}
-        print("members :", members)
+        group_photo = data.get("group_photo")  # Base64 encoded image data (if provided)
 
         sender_id = session.get("user_id")
-        sender_role = session.get("role").capitalize()  # Ensure sender's role is capitalized
-        print("session data", sender_id, sender_role)
+        sender_role = session.get("role").capitalize()
 
         if not sender_id or not sender_role:
             return jsonify({"error": "Unauthorized"}), 401
@@ -419,38 +443,32 @@ def create_group():
 
         sender_model = ROLE_MODEL_MAP.get(sender_role)
         sender = sender_model.query.filter_by(id=sender_id).first()
-        
+
         if not sender:
             return jsonify({"error": "Sender not found"}), 404
 
-        sender_contact = sender.contact  # Fetch sender's contact number
-        print("sender_contact", sender_contact)
+        sender_contact = sender.contact
 
-        # Retrieve receiver contact details
+        # Prepare member contacts
         member_contacts = []
         for member in members:
-            member["role"] = member["role"].replace("_", " ").title().replace(" ", "")  # Capitalize role first letter
-            print(member["role"])
+            member["role"] = member["role"].replace("_", " ").title().replace(" ", "")
             if member["id"] == sender_id and member["role"] == sender_role:
-                # Skip adding the sender if they are already listed
                 continue  
 
             member_model = ROLE_MODEL_MAP.get(member["role"])
-            print("member_model", member_model)
             user = member_model.query.filter_by(id=member["id"]).first()
-            print("user", user)
             if user:
                 member_contacts.append({
                     "id": member["id"],
                     "role": member["role"],
-                    "contact": member["mobile"]  # Use provided contact number
+                    "contact": member["mobile"]
                 })
 
         # Ensure sender is automatically included in the group
         member_contacts.append({"id": sender_id, "role": sender_role, "contact": sender_contact})
-        print("member_contact_details", member_contacts)
 
-        # Check if a group with the same members already exists
+        # Check if group already exists
         existing_group = group_chat_collection.find_one({
             "members": {"$size": len(member_contacts), "$all": member_contacts}
         })
@@ -464,17 +482,24 @@ def create_group():
                 "message": "Group already exists."
             })
 
-        # Create new group
-        new_group = {
+        # Prepare the group document
+        group_data = {
             "name": group_name,
             "description": description,
             "created_by": {"id": sender_id, "role": sender_role, "contact": sender_contact},
             "members": member_contacts,
             "messages": [],
-            # "created_at": datetime.utcnow()
         }
 
-        group_id = group_chat_collection.insert_one(new_group).inserted_id
+        # If an image is provided and is smaller than 10MB, store it directly in the document
+        if group_photo:
+            # Decode the base64 image
+            image_data = base64.b64decode(group_photo.split(",")[1])  # Remove the "data:image/png;base64," part
+            if len(image_data) < 10 * 1024 * 1024:  # Check if it's less than 10MB
+                group_data["group_photo"] = Binary(image_data)  # Store image as binary
+
+        # Create the group document
+        group_id = group_chat_collection.insert_one(group_data).inserted_id
 
         return jsonify({
             "group_id": str(group_id),
@@ -546,6 +571,15 @@ def fetch_group_messages():
             return jsonify({"error": "Invalid request. Provide group_id"}), 400
 
         group_chat = group_chat_collection.find_one({"_id": ObjectId(group_id)})
+        group_image_binary = group_chat.get("group_photo")  # Fetch the binary data for the image
+
+        if group_image_binary:
+            # Convert the binary image to a base64 string
+            group_image_base64 = base64.b64encode(group_image_binary).decode('utf-8')
+            group_chat["group_photo"] = f"data:image/jpeg;base64,{group_image_base64}"  # Format for embedding in img tag
+            
+        else:
+            group_chat["group_photo"] = None  # If no image, set it to None
 
         if not group_chat:
             return jsonify({"error": "Group not found"}), 404
@@ -646,14 +680,22 @@ def fetch_personal_messages():
         all_messages = [msg for chat in chat_list for msg in chat.get("messages", [])]
         all_messages.sort(key=lambda msg: msg.get("timestamp", 0))
 
+        # Mark messages as "read" if they are delivered and the current user is the receiver
+        for chat in chat_list:
+            for msg in chat.get("messages", []):
+                if msg.get("status") == "delivered" and msg.get("receiver_contact") == sender.contact:
+                    msg["status"] = "read"  # Mark as read if receiver views it
+
+            # Update the chat with modified messages
+            personal_chat_collection.update_one({"_id": chat["_id"]}, {"$set": {"messages": chat["messages"]}})
+
         formatted_messages = [{
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
             "sender_name": msg.get("sender_name"),
-            "sender_contact": msg.get("sender_contact"),  # Include sender_contact
-            "status":msg.get("status")
+            "sender_contact": msg.get("sender_contact"),
+            "status": msg.get("status")
         } for msg in all_messages]
-        print(formatted_messages)
 
         return jsonify({
             "chat_ids": [str(chat["_id"]) for chat in chat_list],
@@ -663,6 +705,7 @@ def fetch_personal_messages():
     except Exception as e:
         print("Error:", e)
         return jsonify({"error": str(e)}), 500
+
 
 
 
