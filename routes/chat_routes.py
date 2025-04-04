@@ -64,6 +64,17 @@ def get_landing_page():
 
         user_mobile = user.contact  # Fetch mobile number
 
+        # Mark all the messages as 'received' for the logged-in user
+        personal_chats = list(personal_chat_collection.find({"$or": [{"sender_contact": user_mobile}, {"receiver_contact": user_mobile}]}))
+        
+        for chat in personal_chats:
+            for msg in chat.get("messages", []):
+                if msg.get("receiver_contact") == user_mobile and msg.get("status") != "received":
+                    msg["status"] = "received"
+            
+            # Update the chat with the modified messages
+            personal_chat_collection.update_one({"_id": chat["_id"]}, {"$set": {"messages": chat["messages"]}})
+
         # Fetch chats where the logged-in user is the sender
         sender_chats = list(personal_chat_collection.find({"sender_contact": user_mobile}))        
 
@@ -669,14 +680,22 @@ def fetch_personal_messages():
         all_messages = [msg for chat in chat_list for msg in chat.get("messages", [])]
         all_messages.sort(key=lambda msg: msg.get("timestamp", 0))
 
+        # Mark messages as "read" if they are delivered and the current user is the receiver
+        for chat in chat_list:
+            for msg in chat.get("messages", []):
+                if msg.get("status") == "delivered" and msg.get("receiver_contact") == sender.contact:
+                    msg["status"] = "read"  # Mark as read if receiver views it
+
+            # Update the chat with modified messages
+            personal_chat_collection.update_one({"_id": chat["_id"]}, {"$set": {"messages": chat["messages"]}})
+
         formatted_messages = [{
             "text": msg.get("text"),
             "timestamp": msg.get("timestamp"),
             "sender_name": msg.get("sender_name"),
-            "sender_contact": msg.get("sender_contact"),  # Include sender_contact
-            "status":msg.get("status")
+            "sender_contact": msg.get("sender_contact"),
+            "status": msg.get("status")
         } for msg in all_messages]
-        print(formatted_messages)
 
         return jsonify({
             "chat_ids": [str(chat["_id"]) for chat in chat_list],
@@ -686,6 +705,7 @@ def fetch_personal_messages():
     except Exception as e:
         print("Error:", e)
         return jsonify({"error": str(e)}), 500
+
 
 
 

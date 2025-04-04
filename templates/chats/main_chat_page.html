@@ -22,6 +22,24 @@
 </head>
 
 <style>
+
+    .date-separator {     
+        text-align: center;     
+        margin: 10px 0;     
+        font-size: 12px;     
+        color: #777;     
+        font-weight: bold;     
+        background: #f0f0f0;     
+        padding: 5px 10px;     
+        display: inline-block;     
+        border-radius: 10px; 
+    }  
+    .message-time {     
+        font-size: 10px;     
+        color: gray;     
+        text-align: right;     
+        margin-top: 5px; 
+    }
     .card {
         border-radius: 10px;
         transition: 0.3s;
@@ -93,6 +111,89 @@
                 .bi {
                     margin-right: 8px;
                 }
+ /* Wrapper for each message */
+.message-wrapper {
+    display: flex;
+    margin-bottom: 10px; /* Space between messages */
+}
+
+/* Sender's message */
+.message-wrapper.sent {
+    justify-content: flex-end; /* Align to the right */
+}
+
+/* Receiver's message */
+.message-wrapper.received {
+    justify-content: flex-start; /* Align to the left */
+}
+
+/* Message content */
+.chat-message {
+    max-width: 70%; /* You can adjust this as needed */
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    word-wrap: break-word;
+}
+
+/* Background for sender's message */
+.message-wrapper.sent .chat-message {
+    background-color: #dcf8c6; /* Light green for sent messages */
+    color: black;
+}
+
+/* Background for receiver's message */
+.message-wrapper.received .chat-message {
+    background-color: #f1f0f0; /* Light gray for received messages */
+    color: black;
+}
+
+/* Message timestamp and status */
+.message-time {
+    font-size: 12px;
+    color: #888;
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+}
+
+/* Status icon (checkmark) */
+.status-icon {
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+/* Sent status (one gray tick) */
+.message-wrapper.sent .status-icon.sent {
+    color: gray; /* Single gray tick */
+}
+
+/* Delivered status (two gray ticks) */
+.message-wrapper.sent .status-icon.delivered {
+    color: gray; /* Two gray ticks */
+}
+
+/* Read status (two blue ticks) */
+.message-wrapper.sent .status-icon.read {
+    color: #0084ff; /* Two blue ticks for read */
+}
+
+/* Customize the layout for ticks */
+.status-icon::before {
+    content: '✔'; /* Default content for single tick */
+}
+
+/* Double tick for delivered */
+.message-wrapper.sent .status-icon.delivered::before {
+    content: '✔✔'; /* Double gray ticks for delivered */
+}
+
+/* Blue double tick for read */
+.message-wrapper.sent .status-icon.read::before {
+    content: '✔✔'; /* Double blue ticks for read */
+    color: #0084ff; /* Blue */
+}
+
 
 </style>
 
