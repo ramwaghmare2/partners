@@ -194,6 +194,105 @@
     color: #0084ff; /* Blue */
 }
 
+.caption-send-wrapper {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 15px;
+    gap: 10px;
+    box-sizing: border-box;
+}
+
+.caption-send-wrapper input {
+    flex: 1;
+    border-radius: 20px;
+    padding: 8px 14px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+.caption-send-wrapper button {
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+.media-modal {
+    position: fixed;
+    top: 122px;
+    left: 300px;
+    width: 82vw;
+    height: 85vh;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.media-modal-content {
+    top: 100px;
+    left: 335px;
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modal-img {
+    width: 70%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.modal-footer {
+    width: 100%;
+    display: flex;
+    gap: 10px;
+}
+
+.modal-footer input {
+    flex-grow: 1;
+    padding: 8px;
+    border-radius: 5px;
+    border: none;
+}
+
+.modal-footer button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 5px;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    color: white;
+    background: rgba(0, 0, 0, 0.4);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
 
 </style>
 
@@ -348,9 +447,9 @@
             </div>
 
             <div class="chat-header">
-                <h5 id="chatTitle" onclick="openEditGroupModal()"
-        style="cursor: pointer;">Select a Chat</h5>
+                <h5 id="chatTitle" onclick="openEditGroupModal()" style="cursor: pointer;">Select a Chat</h5>
             </div>
+            
             <div class="chat-body" id="chatBody">
                 <p class="text-muted text-center">No chat selected.</p>
             </div>
@@ -358,12 +457,53 @@
             <!-- Floating notification -->
             <div id="newMessagePopup" style="display:none;">  
                 New Messages
-                
             </div>
-            <div class="chat-footer">
+            <!-- Media Preview Modal -->
+            <div id="mediaModal" class="media-modal" style="display: none;">
+                <div class="media-modal-content">
+                    <span id="closeModal" class="close">&times;</span>
+                    <div id="previewContainer"></div>
+                    <div class="modal-footer">
+                        <div class="caption-send-wrapper">
+                            <input type="text" class="form-control" id="captionInput" placeholder="Type a message...">
+                            <button class="btn btn-primary" id="sendMediaBtn">
+                                <i class="fa fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <div class="chat-footer d-flex align-items-center gap-2">
+                <!-- Upload Dropdown Button -->
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fa fa-paperclip"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#" onclick="document.getElementById('photoInput').click()">Photo</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="document.getElementById('videoInput').click()">Video</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="document.getElementById('docInput').click()">Document</a></li>
+                    </ul>
+                </div>
+            
+                <!-- Hidden File Inputs -->
+                <input type="file" id="photoInput" accept="image/*" style="display: none;" multiple>
+                <input type="file" id="videoInput" accept="video/*" style="display: none;" multiple>
+                <input type="file" id="docInput" accept=".pdf,.doc,.docx,.txt,.ppt,.pptx,.xls,.xlsx" style="display: none;" multiple>
+            
+                <!-- Text Input -->
                 <input type="text" class="form-control" id="messageInput" placeholder="Type a message...">
-                <button class="btn btn-primary" id="sendMessage"><i class="fa fa-paper-plane"></i></button>
+            
+                <!-- Send Button -->
+                <button class="btn btn-primary" id="sendMediaBtn">
+                    <i class="fa fa-paper-plane"></i>
+                </button>
             </div>
+            
+            
         </div>
     </div>
 
@@ -560,6 +700,130 @@ document.querySelectorAll('.group-chat').forEach(group => {
         console.log("Group Photo:", groupPhoto);
     });
 });
+
+/// File input event listeners
+document.getElementById('photoInput').addEventListener('change', (e) => handleFilePreview(e, 'image'));
+document.getElementById('videoInput').addEventListener('change', (e) => handleFilePreview(e, 'video'));
+document.getElementById('docInput').addEventListener('change', (e) => handleFilePreview(e, 'document'));
+
+// Handle preview
+function handleFilePreview(event, type) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const previewContainer = document.getElementById('previewContainer');
+    previewContainer.innerHTML = ''; // Clear previous content
+
+    if (type === 'image') {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.className = 'modal-img';
+        previewContainer.appendChild(img);
+    } else if (type === 'video') {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.controls = true;
+        video.className = 'modal-img';
+        previewContainer.appendChild(video);
+    } else if (type === 'document') {
+    const iconWrapper = document.createElement('div');
+    iconWrapper.className = 'doc-icon-wrapper text-center my-3';
+
+    const fileName = file.name.toLowerCase();
+    let iconClass = 'bi-file-earmark-fill';
+
+    if (fileName.endsWith('.pdf')) {
+        iconClass = 'bi-file-earmark-pdf-fill';
+    } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+        iconClass = 'bi-file-earmark-word-fill';
+    } else if (fileName.endsWith('.xls') || fileName.endsWith('.xlsx')) {
+        iconClass = 'bi-file-earmark-excel-fill';
+    } else if (fileName.endsWith('.ppt') || fileName.endsWith('.pptx')) {
+        iconClass = 'bi-file-earmark-ppt-fill';
+    }
+
+    const icon = document.createElement('i');
+    icon.className = `bi ${iconClass} text-primary`;
+    icon.style.fontSize = '100px';
+
+    iconWrapper.appendChild(icon);
+
+    const docInfo = document.createElement('div');
+    docInfo.className = 'doc-preview text-center mt-2 text-white'; // 👈 text-white added here
+    docInfo.textContent = `${file.name}`;
+
+    previewContainer.appendChild(iconWrapper);
+    previewContainer.appendChild(docInfo);
+}
+
+
+    // Show modal
+    document.getElementById('mediaModal').style.display = 'block';
+
+    // Optional: store file and type for sending
+    window.selectedMedia = { file, type };
+}
+
+// Close modal
+document.getElementById('closeModal').addEventListener('click', () => {
+    document.getElementById('mediaModal').style.display = 'none';
+    document.getElementById('captionInput').value = '';
+    document.getElementById('previewContainer').innerHTML = '';
+    window.selectedMedia = null;
+});
+
+
+// Max file size allowed (16MB)
+const MAX_FILE_SIZE = 16 * 1024 * 1024;  // 16MB in bytes
+
+// Handle Send Media button
+document.getElementById('sendMediaBtn').addEventListener('click', () => {
+    const caption = document.getElementById('captionInput').value;
+    const { file, type } = window.selectedMedia || {};
+    
+    const chatWindow = document.getElementById("chatWindow");
+    const groupId = chatWindow.getAttribute("data-group-id");
+    const receiverId = chatWindow.getAttribute("data-user-id");
+    const receiverRole = chatWindow.getAttribute("data-user-role");
+
+    if (!file) return;
+
+    // Check the size of the file
+    if (file.size > MAX_FILE_SIZE) {
+        alert("The file is too large. Maximum size allowed is 16MB.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("message", caption || '');
+    formData.append("media", file);
+    formData.append("media_type", type);
+
+    if (groupId) {
+        formData.append("receiver_id", groupId);
+        formData.append("receiver_role", '');
+    } else if (receiverId) {
+        formData.append("receiver_id", receiverId);
+        formData.append("receiver_role", receiverRole);
+    }
+
+    fetch("/chat/send_message", {
+        method: "POST",
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        console.log("Media message sent:", data);
+        document.getElementById('mediaModal').style.display = 'none';
+        document.getElementById('captionInput').value = '';
+        document.getElementById('previewContainer').innerHTML = '';
+        window.selectedMedia = null;
+    })
+    .catch(err => {
+        console.error("Failed to send media message", err);
+    });
+});
+
 
 
 

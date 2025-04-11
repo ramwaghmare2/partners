@@ -10,6 +10,7 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
     chatWindow.setAttribute("data-user-id", receiverId);
     chatWindow.setAttribute("data-user-role", receiverRole);
     chatWindow.setAttribute("data-user-contact", receiverContact);
+    
 
     chatTitle.textContent = `${receiverName} (${receiverContact})`;
     chatFooter.style.display = "flex";
@@ -27,16 +28,16 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
             .then(data => {
                 let currentMessageCount = data.messages.length;
                 let isScrolledToBottom = chatBody.scrollHeight - chatBody.scrollTop <= chatBody.clientHeight + 5;
-                
+    
                 chatBody.innerHTML = "";
                 if (!data.messages || data.messages.length === 0) {
                     chatBody.innerHTML = "<p class='text-muted text-center'>No messages yet.</p>";
                 } else {
-                    let senderContact = chatWindow.getAttribute("data-user-contact");
+                    let loggedInUserContact = data.logged_in_user_contact;
                     let lastDate = "";
     
                     data.messages.forEach(msg => {
-                        let isSender = msg.sender_contact === senderContact;
+                        let isSender = msg.sender_contact === loggedInUserContact;
     
                         // Parse timestamp: "27-03-2025 04:35:50 PM"
                         let [datePart, timePart, ampm] = msg.timestamp.split(" ");
@@ -72,13 +73,44 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
                         let messageElement = document.createElement("div");
                         messageElement.classList.add("chat-message");
     
-                        messageElement.innerHTML = `
+                        let messageHTML = `
                             <div class="message-text">${msg.text}</div>
                             <div class="text-muted message-time">
                                  ${formattedTime} ${isSender ? statusIcon : ""}
                             </div>
                         `;
     
+                        // Check if there's media and render accordingly
+                        if (msg.media) {
+                            let media = msg.media;
+                            if (media.type === 'image') {
+                                messageHTML += `
+                                    <div class="media-preview">
+                                        <img src="${media.url}" alt="${media.file_name}" class="media-img" />
+                                    </div>
+                                `;
+                            } else if (media.type === 'video') {
+                                messageHTML += `
+                                    <div class="media-preview">
+                                        <video controls>
+                                            <source src="${media.url}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                `;
+                            } else if (media.type === 'audio') {
+                                messageHTML += `
+                                    <div class="media-preview">
+                                        <audio controls>
+                                            <source src="${media.url}" type="audio/mpeg">
+                                            Your browser does not support the audio element.
+                                        </audio>
+                                    </div>
+                                `;
+                            }
+                        }
+    
+                        messageElement.innerHTML = messageHTML;
                         messageWrapper.appendChild(messageElement);
                         chatBody.appendChild(messageWrapper);
                     });
@@ -96,12 +128,9 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
             })
             .catch(error => console.error("Error fetching personal messages:", error));
     }
-    
-    
         
     
     
-
     fetchPersonalMessages();
     window.refreshInterval = setInterval(fetchPersonalMessages, 1000);
 
@@ -115,7 +144,6 @@ function openPersonalChat(receiverId, receiverName, receiverRole, receiverContac
         newMessageButton.style.display = "none";
     });
 }
-
 
 
 // Javascript for fetch group messages

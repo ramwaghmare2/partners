@@ -296,129 +296,124 @@ def start_chat():
 
 
 
+import os
+from bson import ObjectId
+from datetime import datetime
+import pytz
+from flask import jsonify, request, session
+from werkzeug.utils import secure_filename
+
+# Max file size allowed (16MB)
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'}
+
+
+# Function to check allowed file types
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# Updated send_message route
 @chat_bp.route('/send_message', methods=['POST'])
 def send_message():
     try:
-        data = request.get_json()
-        print(f'data {data}')
-        receiver_id = str(data.get("receiver_id"))  # Can be a user ID or group ID
-        receiver_role = data.get("receiver_role")  # Null for group messages
-        message_text = data.get("message")
+        # Check if the request contains files
+        if request.content_type.startswith('multipart/form-data'):
+            message_text = request.form.get("message")
+            receiver_id = request.form.get("receiver_id")
+            receiver_role = request.form.get("receiver_role")
 
-        print(f"Received Data: receiver_id={receiver_id}, receiver_role={receiver_role}, message_text={message_text}")
+            file = request.files.get("media")
+            media_binary = None
+            media_filename = None
+            media_type = request.form.get("media_type")
 
-        # Get user ID and role from session
-        sender_id = session.get("user_id")
-        sender_role = session.get("role")
+            # File size validation
+            if file:
+                if file.content_length > MAX_FILE_SIZE:
+                    return jsonify({"error": "File size exceeds 16MB limit."}), 400
+                
+                # Read the file content and store it as binary
+                media_binary = file.read()
+                media_filename = secure_filename(file.filename)  # Sanitize file name
+                print(f'MEDIA {media_filename}')
 
-        print(f"Session Data: sender_id={sender_id}, sender_role={sender_role}")
+            # Ensure we have necessary data
+            sender_id = session.get("user_id")
+            sender_role = session.get("role")
+            if not sender_id or not sender_role:
+                return jsonify({"error": "Unauthorized: User not logged in"}), 401
 
-        if not sender_id or not sender_role:
-            print("Unauthorized: User not logged in")
-            return jsonify({"error": "Unauthorized: User not logged in"}), 401
+            if not receiver_id:
+                return jsonify({"error": "Receiver ID is required"}), 400
 
-        if not receiver_id or not message_text:
-            print("Error: Receiver ID and message are required")
-            return jsonify({"error": "Receiver ID and message are required"}), 400
+            timestamp = datetime.now(pytz.timezone('Asia/Kolkata')).strftime("%d-%m-%Y %I:%M:%S %p")
 
-        # Fetch sender details
-        sender_model = ROLE_MODEL_MAP.get(sender_role)
-        sender = sender_model.query.get(sender_id) if sender_model else None
+            # Fetch sender details
+            sender_model = ROLE_MODEL_MAP.get(sender_role)
+            sender = sender_model.query.get(sender_id) if sender_model else None
+            if not sender:
+                return jsonify({"error": "Sender not found"}), 404
 
-        print(f"🔹 Sender Found: {sender}")
-
-        if not sender:
-            print("Error: Sender not found")
-            return jsonify({"error": "Sender not found"}), 404
-
-        timestamp = datetime.now(pytz.timezone('Asia/Kolkata')).strftime("%d-%m-%Y %I:%M:%S %p")
-
-        print("timestamp", timestamp)
-
-        # **Handle Group Chat**
-        if ObjectId.is_valid(receiver_id):  
-            print("Valid ObjectId detected, checking for group chat...")
-            existing_group = group_chat_collection.find_one({"_id": ObjectId(receiver_id)})
-
-            print(f"Group Chat Found: {existing_group}")
-
-            if existing_group:
-                # **Update Group Chat Messages**
-                group_chat_collection.update_one(
-                    {"_id": ObjectId(receiver_id)},
-                    {"$push": {"messages": {
-                        "text": message_text, 
-                        "timestamp": timestamp, 
-                        "status": "sent",  # Adding status to message
-                        "sender_id": sender_id,
-                        "sender_role": sender_role,
-                        "sender_name": sender.name,
-                        "sender_contact": sender.contact
-                    }}}
-                )
-                print("Message added to group chat successfully")
-                return jsonify({"message": "Message sent to group successfully", "timestamp": timestamp}), 200
-
-        # **Handle Personal Chat**
-        print("Checking for personal chat...")
-
-        receiver_model = ROLE_MODEL_MAP.get(receiver_role)
-        receiver = receiver_model.query.get(receiver_id) if receiver_model else None
-
-        print(f"Receiver Found: {receiver}")
-
-        if not receiver:
-            print("Error: Receiver not found")
-            return jsonify({"error": "Receiver not found"}), 404
-
-        existing_chat = personal_chat_collection.find_one({
-            "$or": [
-                {"sender_contact": sender.contact, "receiver_contact": receiver.contact},
-                {"sender_contact": receiver.contact, "receiver_contact": sender.contact}
-            ]
-        })
-
-        print(f"Existing Personal Chat: {existing_chat}")
-
-        if existing_chat:
-            # Update existing chat
-            personal_chat_collection.update_one(
-                {"_id": existing_chat["_id"]},  # Filter condition
-                {  
-                    "$push": {
-                        "messages": {
-                            "text": message_text, 
-                            "timestamp": timestamp,
-                            "status": "sent",  # Adding status to message
-                            "sender_contact": sender.contact
-                        }
-                    }
-                }
-            )
-            print("Message added to existing personal chat")
-        else:
-            # Create new chat
-            new_chat = {
+            # Prepare message data
+            message_data = {
+                "text": message_text,
+                "timestamp": timestamp,
+                "status": "sent",
                 "sender_id": sender_id,
                 "sender_role": sender_role,
+                "sender_name": sender.name,
                 "sender_contact": sender.contact,
-                "receiver_id": receiver_id,
-                "receiver_role": receiver_role,
-                "receiver_contact": receiver.contact,
-                "messages": [{
-                    "text": message_text, 
-                    "timestamp": timestamp,
-                    "status": "sent"  # Adding status to message
-                }],
+                "media_type": media_type,
+                "media_filename": media_filename,
+                "media_content": media_binary  # Store media as binary data
             }
-            personal_chat_collection.insert_one(new_chat)
-            print("New personal chat created and message added")
 
-        return jsonify({"message": "Message sent successfully", "timestamp": timestamp}), 200
+            # Handle Group Chat
+            if ObjectId.is_valid(receiver_id):
+                existing_group = group_chat_collection.find_one({"_id": ObjectId(receiver_id)})
+                if existing_group:
+                    group_chat_collection.update_one(
+                        {"_id": ObjectId(receiver_id)},
+                        {"$push": {"messages": message_data}}
+                    )
+                    return jsonify({"message": "Message sent to group successfully", "timestamp": timestamp}), 200
+
+            # Handle Personal Chat
+            receiver_model = ROLE_MODEL_MAP.get(receiver_role)
+            receiver = receiver_model.query.get(receiver_id) if receiver_model else None
+            if not receiver:
+                return jsonify({"error": "Receiver not found"}), 404
+
+            existing_chat = personal_chat_collection.find_one({
+                "$or": [
+                    {"sender_contact": sender.contact, "receiver_contact": receiver.contact},
+                    {"sender_contact": receiver.contact, "receiver_contact": sender.contact}
+                ]
+            })
+
+            if existing_chat:
+                personal_chat_collection.update_one(
+                    {"_id": existing_chat["_id"]},
+                    {"$push": {"messages": message_data}}
+                )
+            else:
+                new_chat = {
+                    "sender_id": sender_id,
+                    "sender_role": sender_role,
+                    "sender_contact": sender.contact,
+                    "receiver_id": receiver_id,
+                    "receiver_role": receiver_role,
+                    "receiver_contact": receiver.contact,
+                    "messages": [message_data],
+                }
+                personal_chat_collection.insert_one(new_chat)
+
+            return jsonify({"message": "Message sent successfully", "timestamp": timestamp}), 200
 
     except Exception as e:
         print("Error in send_message:", e)
-        return jsonify({"error": str(e)}), 500  
+        return jsonify({"error": str(e)}), 500
+ 
 
         
 
@@ -669,16 +664,16 @@ def fetch_personal_messages():
         if not sender or not receiver:
             return jsonify({"error": "Sender or Receiver not found"}), 404
 
+        # Retrieve chat between sender and receiver, sort messages by timestamp in ascending order
         chat_cursor = personal_chat_collection.find({
             "$or": [
                 {"sender_contact": sender.contact, "receiver_contact": receiver.contact},
                 {"sender_contact": receiver.contact, "receiver_contact": sender.contact}
             ]
-        })
+        }).sort([("messages.timestamp", 1)])  # Sort messages by timestamp in ascending order
 
         chat_list = list(chat_cursor)
         all_messages = [msg for chat in chat_list for msg in chat.get("messages", [])]
-        all_messages.sort(key=lambda msg: msg.get("timestamp", 0))
 
         # Mark messages as "read" if they are delivered and the current user is the receiver
         for chat in chat_list:
@@ -689,22 +684,45 @@ def fetch_personal_messages():
             # Update the chat with modified messages
             personal_chat_collection.update_one({"_id": chat["_id"]}, {"$set": {"messages": chat["messages"]}})
 
-        formatted_messages = [{
-            "text": msg.get("text"),
-            "timestamp": msg.get("timestamp"),
-            "sender_name": msg.get("sender_name"),
-            "sender_contact": msg.get("sender_contact"),
-            "status": msg.get("status")
-        } for msg in all_messages]
+        formatted_messages = []
+
+        for msg in all_messages:
+            formatted_message = {
+                "text": msg.get("text"),
+                "timestamp": msg.get("timestamp"),
+                "sender_name": msg.get("sender_name"),
+                "sender_contact": msg.get("sender_contact"),
+                "status": msg.get("status")
+            }
+
+            # Add media content if available
+            if 'media_path' in msg:  # Changed to look for media_path instead of media_content
+                media_type = msg.get('media_type')
+                media_filename = msg.get('media_filename')
+                media_path = msg.get('media_path')
+
+                if media_path:
+                    # Assuming media_path is a URL or relative file path
+                    formatted_message["media"] = {
+                        "type": media_type,
+                        "file_name": media_filename,
+                        "url": media_path  # Direct URL or file path for the media
+                    }
+
+            formatted_messages.append(formatted_message)
 
         return jsonify({
             "chat_ids": [str(chat["_id"]) for chat in chat_list],
-            "messages": formatted_messages
+            "messages": formatted_messages,
+            "logged_in_user_contact": sender.contact   
         }), 200
 
     except Exception as e:
         print("Error:", e)
         return jsonify({"error": str(e)}), 500
+
+
+
 
 
 
